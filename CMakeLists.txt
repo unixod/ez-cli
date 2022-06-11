@@ -7,6 +7,10 @@ project(ez-cli
 
 include(GNUInstallDirs)
 
+# FIXME: Remove the following pair of lines before commit
+set(CMAKE_C_FLAGS "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined")
+set(CMAKE_CXX_FLAGS "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined")
+
 ##############################################################################
 # Setup project general properties
 ##############################################################################
@@ -34,7 +38,8 @@ include(FetchContent)
 
 FetchContent_Declare(ez-utils
     GIT_REPOSITORY https://github.com/unixod/ez-utils.git
-    GIT_TAG v1.2.0
+#    GIT_TAG v1.2.0
+    GIT_TAG 9b3918061a914e5aa40198fa7863367b6b8ff9cf
     GIT_SHALLOW On)
 
 FetchContent_MakeAvailable(ez-utils)

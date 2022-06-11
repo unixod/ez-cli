@@ -12,7 +12,7 @@ template<
     template<typename...> typename P,
     typename Tuple,
     typename Result = std::tuple<>
-    >
+>
 struct Filter_impl {
     using type = Result;
 };
@@ -21,7 +21,7 @@ template<
     template<typename...> typename P,
     typename H, typename... T,
     typename... R
-    >
+>
 struct Filter_impl<P, std::tuple<H, T...>, std::tuple<R...>>
     : Filter_impl<P, std::tuple<T...>,
                   std::conditional_t<P<H>::value,
