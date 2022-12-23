@@ -33,7 +33,7 @@ struct Transform_impl;
 
 template<template<typename...> typename F, typename... T>
 struct Transform_impl<F, std::tuple<T...>> {
-    using type = std::tuple<F<T>...>;
+    using type = std::tuple<typename F<T>::type...>;
 };
 
 template<template<typename...> typename F, typename Tuple>

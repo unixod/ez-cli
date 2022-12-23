@@ -1,6 +1,8 @@
 #ifndef EZ_CLI_PARAMETER_H
 #define EZ_CLI_PARAMETER_H
 
+#include <string_view>
+
 namespace ez::cli {
 
 namespace details_ {
@@ -45,12 +47,14 @@ template<typename P>
 concept Named_parameter_without_value =
     (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
     details_::Has_value_constructor<P> &&
+    !details_::Has_value_parser<P> &&
     (details_::Has_default_value<P> || std::constructible_from<decltype(P::value())>);
 
 // <app> -a=value -a value --arg=value --arg value
 template<typename P>
 concept Named_parameter_with_value =
     (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
+    !details_::Has_value_constructor<P> &&
     details_::Has_value_parser<P>;
 
 // <app> value
@@ -71,6 +75,5 @@ concept Parameter =
     Positional_parameter<P>;
 
 } // namespace ez::cli
-
 
 #endif // EZ_CLI_PARAMETER_H

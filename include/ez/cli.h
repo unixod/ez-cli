@@ -4,16 +4,18 @@
 #include <concepts>
 #include <ranges>
 #include <type_traits>
+#include <variant>
+#include "ez/utils/match.h"
 #include "ez/utils/type-conversion.h"
 #include "ez/support/std23.h"
-#include "ez/utils/enum-arithmetic.h"
 #include "mp.h"  // tmporary
 #include "gsl.h" // temporary
-#include "static_string.h" // temporary
 #include "ez/cli/details_/lexer.h"
 #include "ez/cli/parameter.h"
+#include "ez/cli/parameter_traits.h"
 #include "ez/c_string_view.h"
 #include "ez/cli/details_/uninitialized.h"
+#include "ez/utils/generator.h"
 
 
 namespace ez::cli::details_ {
@@ -59,20 +61,6 @@ struct Parameter_misuse {
 };
 
 struct Parameter_value_init_error {};
-
-
-template<Parameter P>
-struct Parameter_value_type_impl {
-    using type = decltype(P::value(std::declval<std::string_view>()));
-};
-
-template<Named_parameter_without_value P>
-struct Parameter_value_type_impl<P> {
-    using type = decltype(P::value());
-};
-
-template<Parameter P>
-using Parameter_value_type = Parameter_value_type_impl<P>::type;
 
 
 template<Parameter P>
@@ -256,14 +244,115 @@ template<typename Tuple, typename... Rest_tuples>
 
 } // namespace ez::cli::details_
 
-namespace ez {
+
+
 
 template<typename, auto...>
 struct Show;
 
+namespace ez {
 
 template<typename...>
 class Cli;
+
+namespace details_ {
+template<typename>
+struct Single_version_cli : std::false_type {};
+
+template<cli::Parameter... P>
+struct Single_version_cli<Cli<P...>> : std::true_type {};
+} // namespace details_
+
+template<typename T>
+concept Single_version_cli = details_::Single_version_cli<T>::value;
+
+
+template<Single_version_cli... S_cli>
+class Cli<S_cli...> {
+    template<typename...>
+    struct Type_list{};
+
+    struct Multi_cli_error {};
+
+public:
+    template<typename T>
+        requires std::same_as<std::remove_const_t<T>, char>
+    static auto parse(std::integral auto argc, T** argv)
+    {
+        return parse(argc, argv, [](auto error){
+            throw error;
+        });
+    }
+
+    template<typename T>
+        requires std::same_as<std::remove_const_t<T>, char>
+    static auto parse(std::integral auto argc, T** argv, auto&& error_handler)
+    {
+        using Err_handler_ret_type = decltype(error_handler(std::declval<cli::Error&&>()));
+
+        using Result_type = std::conditional_t<
+            std::same_as<Err_handler_ret_type, void>,
+            std::variant<S_cli...>,
+            std::variant<S_cli..., Err_handler_ret_type>
+        >;
+
+        auto cli_or_error = parse_(Type_list<S_cli...>{}, argc, argv);
+
+        return utils::match(cli_or_error,
+            [](auto& cli) -> Result_type {
+                return std::move(cli);
+            },
+            [&error_handler](cli::Error& error) -> Result_type {
+                if constexpr (std::same_as<Err_handler_ret_type, void>) {
+                    const auto error_copy = error;
+                    error_handler(error);
+
+                    // User provided error_handler is supposed to throw exception as its return
+                    // value type is void, however since we can't always check at compile-time
+                    // if error_handler fulfills this requirement we need to somehow handle a
+                    // situation wherein error_handler doens't throw an exception. The current
+                    // strategy is to throw exception on our own.
+                    throw error_copy;
+                }
+                else {
+                    return error_handler(std::move(error));
+                }
+            }
+        );
+    }
+
+private:
+    template<typename T, typename C, typename... Rest_clis>
+        requires std::same_as<std::remove_const_t<T>, char>
+    static auto parse_(Type_list<C, Rest_clis...>,
+                       std::integral auto argc, T** argv,
+                       Multi_cli_error multi_error = {})
+    {
+        using Result_type = std::variant<S_cli..., cli::Error>;
+
+        auto cli_or_error = C::parse(argc, argv, [](auto error){ return error; });
+
+        return utils::match(cli_or_error,
+            [](C& cli) -> Result_type {
+                // Command line is successfully parsed, return an instance of Cli.
+                return std::move(cli);
+            },
+            [argc, argv, &multi_error](auto& error) -> Result_type {
+                // Try to parse cli according to the rest of cli specs.
+                multi_error += std::move(error);
+                return parse_(Type_list<Rest_clis...>{}, argc, argv, std::move(multi_error));
+            }
+        );
+    }
+
+    static auto parse_(Type_list<>, auto /*argc*/, auto /*argv*/, Multi_cli_error multi_error = {})
+    {
+        return std::variant<S_cli..., cli::Error>{multi_error};
+    }
+};
+
+
+
 
 // TODO:
 // - implement parameter_info  to provide enought info for exception throwing
@@ -283,69 +372,97 @@ class Cli<P...> {
     using Positional_params_tuple = utils::mp::Filter<Is_positional_param, std::tuple<P...>>;
 
 public:
+    template<cli::details_::One_of<P...> T>
+    constexpr decltype(auto) get()
+    {
+        return get_<T>(*this);
+    }
+
+    template<cli::details_::One_of<P...> T>
+    constexpr decltype(auto) get() const
+    {
+        return get_<T>(*this);
+    }
+
     template<typename T>
         requires std::same_as<std::remove_const_t<T>, char>
-    constexpr Cli(std::integral auto argc, T** argv)
-        : Cli{std::views::counted(argv, gsl::narrow_cast<std::ptrdiff_t>(argc))
-              | std::views::drop(1)}
-    {}
-
-    Cli(Cli&& oth)
+    static constexpr auto parse(std::integral auto argc, T** argv)
     {
-        auto move_src_to_tgt = [](auto&&... tgt_src) {
-            auto dtrs = std::array{std::get<0>(tgt_src).gon(std::move(std::get<1>(tgt_src).value()))...};
-            std::ranges::for_each(dtrs, &cli::details_::Detached_destructor::release);
-        };
-
-        auto tgt_src =
-            cli::details_::tuple_zip(
-                cli::details_::tuple_cat_view(named_args_, positional_args_),
-                cli::details_::tuple_cat_view(oth.named_args_, oth.positional_args_)
-            );
-
-        std::apply(move_src_to_tgt, tgt_src);
+        return parse(argc, argv, [](auto error){
+            throw error;
+        });
     }
 
-    Cli(const Cli& oth)
+    template<typename T, typename H>
+        requires std::same_as<std::remove_const_t<T>, char>
+    static constexpr auto parse(std::integral auto argc, T** argv, H&& error_handler)
     {
-        auto copy_src_to_tgt = [](auto&&... tgt_src) {
-            auto dtrs = std::array{std::get<0>(tgt_src).gon(std::get<1>(tgt_src).value())...};
-            std::ranges::for_each(dtrs, &cli::details_::Detached_destructor::release);
-        };
+//        using Err_handler_ret_type = decltype(error_handler(std::declval<cli::Error&&>()));
 
-        auto tgt_src =
-            cli::details_::tuple_zip(
-                cli::details_::tuple_cat_view(named_args_, positional_args_),
-                cli::details_::tuple_cat_view(oth.named_args_, oth.positional_args_)
-            );
+//        using Result_type = std::conditional_t<
+//            std::same_as<Err_handler_ret_type, void>,
+//            Cli,
+//            std::variant<Cli, Err_handler_ret_type>
+//        >;
 
-        std::apply(copy_src_to_tgt, tgt_src);
-    }
+        auto args =
+            std::views::counted(argv, gsl::narrow_cast<std::ptrdiff_t>(argc))
+            | std::views::drop(1)
+            | std::views::transform([](auto arg){ return utils::C_string_view{arg}; });
 
-    Cli& operator = (Cli&&) = default;
-    Cli& operator = (const Cli&) = default;
+        auto cli_or_error = parse_(argc, argv);
 
-    ~Cli() {
-        auto destruct_values = [](auto&... a){
-            (a.destruct_value(), ...);
-        };
-
-        std::apply(destruct_values, cli::details_::tuple_cat_view(named_args_, positional_args_));
-    }
-
-    template<cli::details_::One_of<P...> T>
-    decltype(auto) get()
-    {
-        return get_<T>(*this);
-    }
-
-    template<cli::details_::One_of<P...> T>
-    decltype(auto) get() const
-    {
-        return get_<T>(*this);
+        return parse_(args, std::forward<H>(error_handler));
     }
 
 private:
+    static constexpr std::variant<Cli, cli::Error> parse_(std::ranges::view auto args)
+    {
+        std::tuple<std::optional<cli::Parameter_value_type<P>>...> arg_values;
+
+        for (auto tok: tokenize<P...>(args)) {
+            auto err = utils::match(tok,
+                [&arg_values]<typename Param_type>(cli::details_::Token<Param_type> t) {
+                    auto& v = std::get<std::optional<Param_type>>(arg_values);
+                    if (v.has_value()) {
+//                        if constexpr (!cli::Repeatable_parameter<Param_type>) {
+
+//                        }
+                    }
+                },
+                [](cli::Error error) {
+                    return std::make_optional(error);
+                }
+            );
+
+            if (err) {
+                return err;
+            }
+        }
+//            if (tok_id < named_arg_detached_dtrs.size()) {
+//                auto argv_tail = std::ranges::subrange(std::next(p), e);
+
+//                if (!named_arg_detached_dtrs[k].has_value()) {
+//                    auto [skip, dtr] = init_named_arg_(named_param_index, lexeme_end, argv_tail);
+//                    p += skip;
+//                    named_arg_detached_dtrs[k] = std::move(dtr);
+//                }
+//                else {
+//                    p += append_named_arg_(named_param_index, lexeme_end, argv_tail);
+//                }
+//            }
+//            else if (positional_arg_idx < utils::to_signed(std::tuple_size_v<Positional_params_tuple>)) {
+//                handle_positional_arg_(positional_arg_idx, *p);
+//                ++positional_arg_idx;
+//                ++p;
+//            }
+//            else {
+//                return cli::Error::Unknown_parameter{std::distance(p, e)};
+//            }
+
+        return Cli{};
+    }
+#if 0
     constexpr Cli(std::ranges::view auto args)
     try {
         std::array<std::optional<cli::details_::Detached_destructor>,
@@ -415,7 +532,7 @@ private:
     catch(ez::cli::details_::Parameter_misuse ex) {
         throw_error_(args, ex, ex.problem);
     }
-
+#endif
     constexpr auto init_named_arg_(std::integral auto named_param_index,
                                    utils::C_string_view arg_lexeme_end,
                                    std::ranges::view auto argv_tail)
@@ -480,8 +597,13 @@ private:
     }
 
 private:
-    using Named_param_values_tuple = utils::mp::Transform<cli::details_::Parameter_value, Named_params_tuple>;
-    using Positional_param_values_tuple = utils::mp::Transform<cli::details_::Parameter_value, Positional_params_tuple>;
+    template<typename T>
+    struct To_parameter_value_ {
+        using type = cli::details_::Parameter_value<T>;
+    };
+
+    using Named_param_values_tuple = utils::mp::Transform<To_parameter_value_, Named_params_tuple>;
+    using Positional_param_values_tuple = utils::mp::Transform<To_parameter_value_, Positional_params_tuple>;
 
     Named_param_values_tuple named_args_;
     Positional_param_values_tuple positional_args_;

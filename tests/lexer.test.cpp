@@ -7,6 +7,7 @@
 #include "ez/c_string_view.h"
 #include "ez/utils/badge.h"
 #include "ez/cli/details_/uninitialized.h"
+#include "ez/static_string.h" // temporarly
 
 namespace cli = ez::cli;
 
@@ -94,24 +95,47 @@ struct A_positional_param : Value_parser {};
 } // namespace
 
 
-//namespace my {
+// An example:
+/*
 
-//namespace cli {
-//using Count = ez::cli::P<int, "-c", "--count">;
-//using Enable_debug = ez::cli::P<bool, "-g">;
-//}
+    namespace my::cli_param {
 
-//using Cli = ez::Cli<Count, Enable_debug>;
-//}
+    using Help = ez::cli::Param<"-h", "--help">;
+    using File = ez::cli::Param<std::string, "-f", "--file">;
+    using Verbose = ez::cli::Param<"-v">;
 
-//int main(int argc, char** argv)
-//{
-//    auto cli = my::Cli{argc, argv};
+    } // namesapce cli
 
-//    if (cli.get<my::cli::Count>() == 3) {
-//        // do something
-//    }
-//}
+    namespace my {
+
+    using Cli_error = ...;
+    using Cli_help = ez::Cli<cli_param::Help, ez::cil::Ignore_rest_of_args>;
+    using Cli_regular = ez::Cli<cli_param::File, cli_param::Verbose, ez::cli::Throw_error_if_any<Cli_error>>;
+    // using Cli_regular = ez::Cli<cli::File, cli::Verbose, ez::cli::Return_error_if_any<Cli_error>>;
+
+    using Cli = ez::Cli<Cli_help, Cli_regular>;
+
+    }
+
+    int main_(my::Cli_help help) {
+        std::cout << Cli::help();
+    }
+
+    int main_(my::Cli_error error) {
+
+    }
+
+    int main_(my::Cli_regular cli) {
+        std::fstream in{cli.get<my::cli_param::File>()};
+        ...
+    }
+
+    int main(int argc, char** argv)
+    {
+        return std::visit([](auto cli){ main_(cli); }, my::Cli::parse(argc, argv));
+        // return my::Cli::parse_and_visit(argc, argv, [](auto cli){ main_(cli); });
+    }
+*/
 
 TEST_CASE("Flag")
 {
@@ -275,46 +299,62 @@ TEST_CASE("apply_to_tuple")
 
 
 
-TEST_CASE("get_tokens")
+//TEST_CASE("get_tokens")
+//{
+//    constexpr auto arr = ez::cli::details_::get_tokens<A_flag_so_wd, A_flag_sl_wd>();
+//    REQUIRE(arr.size() == 3);
+//    REQUIRE(arr[0].parameter_index == 0);
+//    REQUIRE(arr[1].parameter_index == 1);
+//    REQUIRE(arr[2].parameter_index == 1);
+
+//    REQUIRE(arr[0].lexeme_begin == A_flag_so_wd::short_name);
+//    REQUIRE(arr[1].lexeme_begin == A_flag_sl_wd::short_name);
+//    REQUIRE(arr[2].lexeme_begin == A_flag_sl_wd::long_name);
+//}
+
+//TEST_CASE("Lexer")
+//{
+//    using Lexer = ez::cli::details_::Lexer<A_flag_so_wd, A_flag_sl_wd>;
+
+//    REQUIRE(Lexer::recognize("").first == -1);
+//    REQUIRE(Lexer::recognize("-a").first == -1);
+//    REQUIRE(Lexer::recognize("--c").first == -1);
+//    REQUIRE(Lexer::recognize("--d").first == -1);
+//    REQUIRE(Lexer::recognize("-cd").first == -1);
+//    REQUIRE(Lexer::recognize("-dd").first == -1);
+//    REQUIRE(Lexer::recognize("-d-parameter").first == -1);
+//    REQUIRE(Lexer::recognize("--d-parameterk").first == -1);
+//    REQUIRE(Lexer::recognize("--d-parameterk=12").first == -1);
+
+//    REQUIRE(Lexer::recognize("-c").first == 0);
+//    REQUIRE(Lexer::recognize("-d").first == 1);
+//    REQUIRE(Lexer::recognize("--d-parameter").first == 1);
+//    REQUIRE(Lexer::recognize("--d-parameter=12").first == 1);
+
+//    auto str0 = "-d";
+//    REQUIRE(Lexer::recognize(str0).second == str0+2);
+
+//    auto str1 = "--d-parameter";
+//    REQUIRE(Lexer::recognize(str1).second == str1+13);
+
+//    auto str2 = "--d-parameter=value";
+//    REQUIRE(Lexer::recognize(str2).second == str2+13);
+//}
+
+TEST_CASE("tokenize")
 {
-    constexpr auto arr = ez::cli::details_::get_tokens<A_flag_so_wd, A_flag_sl_wd>();
-    REQUIRE(arr.size() == 3);
-    REQUIRE(arr[0].parameter_index == 0);
-    REQUIRE(arr[1].parameter_index == 1);
-    REQUIRE(arr[2].parameter_index == 1);
+    auto args = std::array{
+        "-a", "-b"
+    };
 
-    REQUIRE(arr[0].lexeme_begin == A_flag_so_wd::short_name);
-    REQUIRE(arr[1].lexeme_begin == A_flag_sl_wd::short_name);
-    REQUIRE(arr[2].lexeme_begin == A_flag_sl_wd::long_name);
-}
+    // TODO: Cover cases:
+    // - 0 number of named parameters
+    // - 0 number of positional parameters
+    // - 0 number of parameters or any kind
+    for (auto tok : cli::details_::tokenize<A_flag_so_wd, A_flag_sl_wd>(args)) {
+        tok.index();
+    }
 
-TEST_CASE("Lexer")
-{
-    using Lexer = ez::cli::details_::Lexer<A_flag_so_wd, A_flag_sl_wd>;
-
-    REQUIRE(Lexer::recognize("").first == -1);
-    REQUIRE(Lexer::recognize("-a").first == -1);
-    REQUIRE(Lexer::recognize("--c").first == -1);
-    REQUIRE(Lexer::recognize("--d").first == -1);
-    REQUIRE(Lexer::recognize("-cd").first == -1);
-    REQUIRE(Lexer::recognize("-dd").first == -1);
-    REQUIRE(Lexer::recognize("-d-parameter").first == -1);
-    REQUIRE(Lexer::recognize("--d-parameterk").first == -1);
-    REQUIRE(Lexer::recognize("--d-parameterk=12").first == -1);
-
-    REQUIRE(Lexer::recognize("-c").first == 0);
-    REQUIRE(Lexer::recognize("-d").first == 1);
-    REQUIRE(Lexer::recognize("--d-parameter").first == 1);
-    REQUIRE(Lexer::recognize("--d-parameter=12").first == 1);
-
-    auto str0 = "-d";
-    REQUIRE(Lexer::recognize(str0).second == str0+2);
-
-    auto str1 = "--d-parameter";
-    REQUIRE(Lexer::recognize(str1).second == str1+13);
-
-    auto str2 = "--d-parameter=value";
-    REQUIRE(Lexer::recognize(str2).second == str2+13);
 }
 
 TEST_CASE("asdf") {
@@ -323,8 +363,6 @@ TEST_CASE("asdf") {
     REQUIRE(p == "--"sv);
 }
 
-template<typename...>
-struct Show;
 
 TEST_CASE("C_string_view")
 {
@@ -347,6 +385,8 @@ TEST_CASE("C_string_view")
     REQUIRE(std::ranges::distance(ez::utils::C_string_view{"asdf"}) == 4);
     REQUIRE(std::ranges::distance(ez::utils::C_string_view{""}) == 0);
     STATIC_REQUIRE(std::ranges::borrowed_range<ez::utils::C_string_view>);
+    STATIC_REQUIRE(std::ranges::range<ez::utils::C_string_view>);
+    STATIC_REQUIRE(std::ranges::range<const ez::utils::C_string_view>);
 }
 
 
@@ -438,15 +478,15 @@ TEST_CASE("Cli")
 
 //    static_assert(ez::cli::details_::Has_append_value<A_named_param_so_nd_wa>);
 //    [[maybe_unused]]
-    auto aaa = std::array{
-        "app-name", "-c", static_cast<const char*>(nullptr)
-    };
+//    auto aaa = std::array{
+//        "app-name", "-c", static_cast<const char*>(nullptr)
+//    };
 
-    ez::Cli<
-        A_flag_so_wd/*, A_flag_sl_wd,
-        A_named_param_so_nd_wa, A_named_param_so_nd_na*/> asdf{aaa.size() - 1, aaa.data()};
-    asdf.get<A_flag_so_wd>();
-    REQUIRE(asdf.get<A_flag_so_wd>() == 123);
+//    ez::Cli<
+//        A_flag_so_wd/*, A_flag_sl_wd,
+//        A_named_param_so_nd_wa, A_named_param_so_nd_na*/> asdf{aaa.size() - 1, aaa.data()};
+//    asdf.get<A_flag_so_wd>();
+//    REQUIRE(asdf.get<A_flag_so_wd>() == 123);
 
 //    using Compile = ez::P<int, "-c", "--compile">;
 //    using Opt_lvl = ez::P<Custom_type, "-o", "--optimize", 7>; // Custom_type should have trait specializaiton

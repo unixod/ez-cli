@@ -131,11 +131,11 @@ public:
         assert(p != nullptr);
     }
 
-    constexpr auto begin() const {
+    constexpr auto begin() const noexcept {
         return Iterator{p_};
     }
 
-    constexpr auto end() const {
+    constexpr auto end() const noexcept {
         return std::default_sentinel;
     }
 

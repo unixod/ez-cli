@@ -1,32 +1,88 @@
 #ifndef EZ_CLI_DETAILS_LEXER_H
 #define EZ_CLI_DETAILS_LEXER_H
 
+#include <variant>
+#include <span>
 #include "ez/cli/parameter.h"
+#include "ez/c_string_view.h"
+#include "ez/mp.h"
+#include "ez/static_string.h"
+#include "ez/utils/generator.h"
+
+// TODO: Move to separate class
+namespace ez::cli {
+struct Error {
+    struct Unknown_parameter {
+    };
+
+    template<Parameter, utils::Static_string>
+    struct Parameter_misuse {};
+
+    Error(Unknown_parameter) {};
+
+    template<Parameter P, utils::Static_string msg>
+    Error(Parameter_misuse<P, msg>) {}
+};
+} // namespace ez::cli
 
 namespace ez::cli::details_ {
 
-template<ez::cli::Named_parameter... P>
-consteval auto get_tokens()
+template<typename...>
+struct Type_list {};
+
+
+template<Parameter P>
+using Is_Named_param = std::bool_constant<Named_parameter<P>>;
+
+template<Parameter P>
+using Is_positional_param = std::bool_constant<Positional_parameter<P>>;
+
+//template<Parameter P>
+//using Is_named_param = std::bool_constant<Named_parameter<P>>;
+
+
+///// Return an array of indices of nameed parameters within P...
+//template<Parameter... P>
+//consteval auto get_named_param_idices()
+//{
+//    using Named_params_tuple = utils::mp::Filter<Is_named_param, std::tuple<P...>>;
+
+//    std::size_t k = 0;
+//    std::array<int, std::tuple_size_v<Named_params_tuple>> result;
+//    std::size_t result_i = 0;
+//    ([&k, &result, &result_i]{
+//        if constexpr (Positional_parameter<P>) {
+//            ++k;
+//        }
+//        else {
+//            result[result_i] = k;
+//            ++result_i;
+//        }
+//    }, ...);
+
+//    return result;
+//}
+
+template<Parameter... P>
+consteval auto get_named_param_tokens()
 {
-    struct Token {
-        int parameter_index;
+    struct Param_token {
+        std::size_t parameter_index;
         const char* lexeme_begin;
     };
 
     constexpr auto num_of_tokens = ((Has_short_name<P> + Has_long_name<P>) + ... + 0);
 
-    std::array<Token, num_of_tokens> tokens;
-
     std::size_t token_index = 0;
-    int parameter_index = 0;
-
+    std::array<Param_token, num_of_tokens> tokens;
+    std::size_t parameter_index = 0;
     ([&token_index, &tokens, &parameter_index]() {
         if constexpr (Has_short_name<P>) {
-            tokens[token_index] = Token{parameter_index, std::data(P::short_name)};
+            tokens[token_index] = Param_token{parameter_index, std::data(P::short_name)};
             ++token_index;
         }
         if constexpr (Has_long_name<P>) {
-            tokens[token_index] = Token{parameter_index, std::data(P::long_name)};
+            tokens[token_index] = Param_token{parameter_index, std::data(P::long_name)};
             ++token_index;
         }
         ++parameter_index;
@@ -35,40 +91,173 @@ consteval auto get_tokens()
     return tokens;
 }
 
-template<cli::Parameter... P>
-struct Lexer {
-    // TODO: make use cstring_view instead of raw pointer to const char.
-    constexpr static auto recognize(const char* p) noexcept
-        requires (sizeof...(P) > 0)
-    {
-        auto ts = get_tokens<P...>();
 
-        auto matched_cnt = -1;
-        auto matched_parameter_index = -1;
-        const char* matched_lexeme_end = nullptr;
-        for (; *p != '=' && *p != '\0' && matched_cnt; ++p) {
-            matched_cnt = 0;
+template<Parameter>
+class Token {
+    utils::C_string_view value_lexeme;
+};
 
-            for (auto& [param_idx, t] : ts) {
-                if (t && *p == *t) {
-                    ++t;
-                    matched_lexeme_end = t;
-                    ++matched_cnt;
-                    matched_parameter_index = param_idx;
+template<Named_parameter_without_value P>
+class Token<P> {};
+
+
+template<typename It, Parameter... P, Named_parameter... Named_p>
+consteval auto get_named_funcs_impl(Type_list<Named_p...>)
+{
+    using Token_variant = std::variant<Token<P>..., Error>;
+
+    using R = std::pair<Token_variant, It>;
+    using F = R(It, const char*, It);
+
+    return std::array<F*, sizeof...(Named_p)>{
+        //            -param      aaa ... zzz
+        //            -param=aaa  bbb ... zzz
+        //            ~~~~~~^~~~              ^______
+        //             /     \___________            |
+        //            /                  \           |
+        [](It args_begin, const char* p_end, It args_end) -> R {
+            assert(args_begin != args_end);
+            assert(*p_end == '\0' || *p_end == '=');
+
+            if constexpr (!Has_value_parser<Named_p>) {
+                if (*p_end == '=') {
+                    return R{
+                        Error::Parameter_misuse<Named_p, "Parameter doesn't accept values">{},
+                        args_begin
+                    };
                 }
-                else {
-                    t = nullptr;
-                }
+
+                return R{Token<Named_p>{}, std::next(args_begin)};
+            }
+            else if (*p_end == '=') {
+                return R{Token<Named_p>{std::next(p_end)}, std::next(args_begin)};
+            }
+            else if (auto v = std::next(args_begin); v != args_end){
+                return R{Token<Named_p>{*v}, std::next(v)};
+            }
+            else {
+                return R{
+                    Error::Parameter_misuse<Named_p, "Parameter requires value">{},
+                    args_begin
+                };
+            }
+        }...
+    };
+}
+
+template<typename It, Parameter... P>
+consteval auto get_named_funcs()
+{
+    using Named_params_types =
+        utils::mp::Apply<Type_list, utils::mp::Filter<Is_Named_param, std::tuple<P...>>>;
+
+    return get_named_funcs_impl<It, P...>(Named_params_types{});
+}
+
+
+template<Parameter... P, Positional_parameter... Positional_p>
+consteval auto get_positional_funcs_impl(Type_list<Positional_p...>)
+{
+    using Token_variant = std::variant<Token<P>..., Error>;
+
+    using F = Token_variant(const char*);
+
+    return std::array<F*, sizeof...(Positional_p)>{
+        [](const char* p) -> Token_variant {
+            return Token<Positional_p>{*p};
+        }...
+    };
+}
+
+template<Parameter... P>
+consteval auto get_positional_funcs()
+{
+    using Positional_params_types =
+        utils::mp::Apply<Type_list, utils::mp::Filter<Is_positional_param, std::tuple<P...>>>;
+
+    return get_positional_funcs_impl<P...>(Positional_params_types{});
+}
+
+template<Named_parameter... P>
+    requires (sizeof...(P) > 0)
+std::pair<std::optional<std::size_t>, const char*> recognize_(auto p, Type_list<P...>)
+{
+    auto ts = get_named_param_tokens<P...>();
+
+    auto matched_cnt = sizeof...(P);
+    auto matched_parameter_index = sizeof...(P);
+    const char* matched_lexeme_end = nullptr;
+    for (; *p != '=' && *p != '\0' && matched_cnt; ++p) {
+        matched_cnt = 0;
+
+        for (auto& [param_idx, t] : ts) {
+            if (t && *p == *t) {
+                ++t;
+                matched_lexeme_end = t;
+                ++matched_cnt;
+                matched_parameter_index = param_idx;
+            }
+            else {
+                t = nullptr;
             }
         }
+    }
 
-        if (matched_cnt != 1 || *matched_lexeme_end != '\0') {
-            return std::pair{-1, p};
-        }
-
+    if (matched_cnt == 1 && *matched_lexeme_end == '\0') {
         return std::pair{matched_parameter_index, p};
     }
-};
+
+    return std::pair{std::nullopt, p};
+}
+
+template<Parameter... P>
+    requires (sizeof...(P) > 0)
+std::pair<std::optional<std::size_t>, const char*> recognize_(auto lexeme)
+{
+    using Named_params_types =
+        utils::mp::Apply<Type_list, utils::mp::Filter<Is_Named_param, std::tuple<P...>>>;
+
+    return recognize_<P...>(lexeme, Named_params_types{});
+}
+
+template<Parameter... P>
+    requires (sizeof...(P) > 0)
+utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char*> args)
+{
+    auto p = args.begin();
+    const auto e = args.end();
+
+    constexpr auto named_funcs = get_named_funcs<decltype(p), P...>();
+    constexpr auto positional_funcs = get_positional_funcs<P...>();
+
+    std::size_t next_positional_param_idx = 0;
+    using namespace std::string_view_literals;
+    while (p != e && *p != "--"sv) {
+        if (auto [param_idx, param_lexeme_end] = recognize_<P...>(*p); param_idx.has_value()) {
+            assert(*param_idx < std::size(named_funcs));
+            auto [r, next] = named_funcs[*param_idx](p, param_lexeme_end, e);
+            co_yield r;
+            p = next;
+        }
+        else if (next_positional_param_idx < positional_funcs.size()) {
+            assert(next_positional_param_idx < std::size(positional_funcs));
+            co_yield positional_funcs[next_positional_param_idx](*p);
+            ++next_positional_param_idx;
+            ++p;
+        }
+        else {
+            // FIXME: use co_return
+            /*co_return*/ co_yield Error::Unknown_parameter{};
+        }
+    }
+
+    // Handle rest of positional arguments (if any) following -- in the comand line.
+    for (; p != e; ++p, ++next_positional_param_idx) {
+        assert(next_positional_param_idx < std::size(positional_funcs));
+        co_yield positional_funcs[next_positional_param_idx](*p);
+    }
+}
+
 
 } // namespace ez::cli::details_
 
