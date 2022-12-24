@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 
 project(ez-cli
     VERSION 1.0.0
@@ -37,10 +37,8 @@ endif()
 include(FetchContent)
 
 FetchContent_Declare(ez-utils
-    GIT_REPOSITORY https://github.com/unixod/ez-utils.git
-#    GIT_TAG v1.2.0
-    GIT_TAG 9b3918061a914e5aa40198fa7863367b6b8ff9cf
-    GIT_SHALLOW On)
+    URL /home/eldar/MyProjs/ez-utils
+)
 
 FetchContent_MakeAvailable(ez-utils)
 

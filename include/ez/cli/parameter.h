@@ -2,78 +2,68 @@
 #define EZ_CLI_PARAMETER_H
 
 #include <string_view>
+#include "ez/cli/api/parameter.h"
+#include "ez/static_string.h"
 
 namespace ez::cli {
 
 namespace details_ {
 
-template<typename T, typename U>
-concept Not_same_as = !std::same_as<T, U>;
+// Short_name -----
+template<utils::Static_string shor_name>
+struct Short_name {};
 
-template<typename P>
-concept Has_short_name = requires {
-    { P::short_name } -> std::convertible_to<std::string_view>;
+template<utils::Static_string param_name>
+    requires (!std::ranges::empty(param_name.value))
+struct Short_name<param_name> {
+    constexpr static std::string_view short_name = param_name.value;
 };
 
-template<typename P>
-concept Has_long_name = requires {
-    { P::long_name } -> std::convertible_to<std::string_view>;
+// Long_name -----
+template<utils::Static_string long_name>
+struct Long_name {};
+
+template<utils::Static_string param_name>
+    requires (!std::ranges::empty(param_name.value))
+struct Long_name<param_name> {
+    constexpr static std::string_view long_name = param_name.value;
 };
 
-template<typename P>
-concept Has_default_value = requires {
-    { P::default_value() } -> Not_same_as<void>;
+// Description -----
+template<utils::Static_string param_description>
+struct Description {};
+
+template<utils::Static_string param_description>
+    requires (!std::ranges::empty(param_description.value))
+struct Description<param_description> {
+    constexpr static std::string_view description = param_description.value;
 };
 
-template<typename P>
-concept Has_value_parser = requires(std::string_view sv) {
-    { P::value(sv) } -> Not_same_as<void>;
-};
+template<auto...>
+struct Default_value {};
 
-template<typename P>
-concept Has_value_constructor = requires(std::string_view sv) {
-    { P::value() } -> Not_same_as<void>;
-};
+template<auto...>
+struct Value_constructor {};
 
-template<typename P>
-concept Has_append_value = requires(std::string_view sv) {
-    P::append_value(std::declval<decltype(P::value(sv))&>(), sv);
-};
+template<auto...>
+struct Value_parser {};
 
-} // namespce details_
+template<auto...>
+struct Append_value {};
 
-// <app> -a --arg
-template<typename P>
-concept Named_parameter_without_value =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    details_::Has_value_constructor<P> &&
-    !details_::Has_value_parser<P> &&
-    (details_::Has_default_value<P> || std::constructible_from<decltype(P::value())>);
+} // details_
 
-// <app> -a=value -a value --arg=value --arg value
-template<typename P>
-concept Named_parameter_with_value =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    !details_::Has_value_constructor<P> &&
-    details_::Has_value_parser<P>;
-
-// <app> value
-template<typename P>
-concept Positional_parameter =
-    !details_::Has_short_name<P> &&
-    !details_::Has_long_name<P> &&
-    details_::Has_value_parser<P>;
-
-template<typename P>
-concept Named_parameter =
-    Named_parameter_with_value<P> ||
-    Named_parameter_without_value<P>;
-
-template<typename P>
-concept Parameter =
-    Named_parameter<P> ||
-    Positional_parameter<P>;
+template<typename T, utils::Static_string short_name = "", utils::Static_string long_name = "", utils::Static_string description = "", auto... f>
+struct Parameter :
+    details_::Short_name<short_name>,
+    details_::Long_name<long_name>,
+    details_::Description<description>,
+    details_::Default_value<f...>,
+    details_::Value_constructor<f...>,
+    details_::Value_parser<f...>,
+    details_::Append_value<f...> {};
 
 } // namespace ez::cli
+
 
 #endif // EZ_CLI_PARAMETER_H

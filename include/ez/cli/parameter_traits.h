@@ -3,7 +3,7 @@
 
 #include "ez/cli/parameter.h"
 
-namespace ez::cli {
+namespace ez::cli::api {
 
 namespace details_ {
 
@@ -21,9 +21,9 @@ struct Parameter_value_type_impl<P> {
 
 
 template<Parameter P>
-using Parameter_value_type = details_::Parameter_value_type_impl<P>::type;
+using Parameter_value_t = typename details_::Parameter_value_type_impl<P>::type;
 
-} // namespace ez::cli
+} // namespace ez::cli::api
 
 
 #endif // EZ_CLI_PARAMETER_TRAITS_H
