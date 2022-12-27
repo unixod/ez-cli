@@ -1,33 +1,87 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/traits.h"
-#include "ez/utils/type-conversion.h"
+#include "ez/cli/parameter/concepts.h"
 
 template<typename T>
-constexpr bool complete_t() {
-    if constexpr (requires { T{}; } ) {
-        return true;
-    }
-    else {
-        return false;
-    }
+constexpr auto has_doi() {
+    return requires { T::default_value(); };
 }
 
+using ez::cli::api::details_::Has_short_name;
+using ez::cli::api::details_::Has_long_name;
+using ez::cli::api::details_::Has_unit_name;
+using ez::cli::api::details_::Has_description;
+using ez::cli::api::details_::Has_default_value;
+using ez::cli::api::details_::Has_value_parser;
+using ez::cli::api::details_::Has_true_value;
+using ez::cli::api::details_::Has_false_value;
+using ez::cli::api::details_::Has_repeated_value_parser;
+using ez::cli::api::Positional_parameter;
+using ez::cli::api::Regular_parameter;
+using ez::cli::api::Bool_parameter;
+using ez::cli::api::Parameter;
 
-
-TEST_CASE("ez::cli::Positional_parameter must have name, description and value-parser" )
+TEST_CASE("Mandatory ez::cli::Positional_parameter (i.e. has no default value)")
 {
     using P = ez::cli::Positional_parameter<"some-param",
         "The some-param descritption.",
         [](std::string_view sv) {
-                                                std::from_ch
-            return 3;
+            return sv;
         }
     >;
 
     STATIC_REQUIRE(P::name == "some-param");
     STATIC_REQUIRE(P::description == "The some-param descritption.");
-    STATIC_REQUIRE(P::value("123") == 123);
+    STATIC_REQUIRE(P::parse_value("123") == "123");
+
+    STATIC_REQUIRE(Positional_parameter<P>);
+    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
+    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Has_short_name<P>);
+    STATIC_REQUIRE_FALSE(Has_long_name<P>);
+    STATIC_REQUIRE(Has_unit_name<P>);
+    STATIC_REQUIRE(Has_description<P>);
+    STATIC_REQUIRE(Has_value_parser<P>);
+    STATIC_REQUIRE_FALSE(Has_default_value<P>);
+    STATIC_REQUIRE_FALSE(Has_true_value<P>);
+    STATIC_REQUIRE_FALSE(Has_false_value<P>);
+    STATIC_REQUIRE_FALSE(Has_repeated_value_parser<P>);
+}
+
+TEST_CASE("Optional ez::cli::Positional_parameter (i.e. has default value)")
+{
+    using namespace std::string_view_literals;
+
+    using P = ez::cli::Positional_parameter<"some-param",
+        "The some-param descritption.",
+        []() {
+            return "default-value"sv;
+        },
+        [](std::string_view sv) {
+            return sv;
+        }
+    >;
+
+    STATIC_REQUIRE(P::name == "some-param");
+    STATIC_REQUIRE(P::description == "The some-param descritption.");
+    REQUIRE(P::default_value() == "default-value");
+    REQUIRE(P::parse_value("123") == "123");
+
+    STATIC_REQUIRE(Positional_parameter<P>);
+    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
+    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Has_short_name<P>);
+    STATIC_REQUIRE_FALSE(Has_long_name<P>);
+    STATIC_REQUIRE(Has_unit_name<P>);
+    STATIC_REQUIRE(Has_description<P>);
+    STATIC_REQUIRE(Has_value_parser<P>);
+    STATIC_REQUIRE(Has_default_value<P>);
+    STATIC_REQUIRE_FALSE(Has_true_value<P>);
+    STATIC_REQUIRE_FALSE(Has_false_value<P>);
+    STATIC_REQUIRE_FALSE(Has_repeated_value_parser<P>);
 }
 
 //TEST_CASE("")

@@ -27,13 +27,18 @@ concept Has_long_name = requires {
 };
 
 template<typename P>
+concept Has_description = requires {
+    { P::description } -> std::convertible_to<std::string_view>;
+};
+
+template<typename P>
 concept Has_default_value = requires {
     { P::default_value() } -> Not_same_as<void>;
 };
 
 template<typename P>
 concept Has_value_parser = requires(std::string_view sv) {
-    { P::value(sv) } -> Not_same_as<void>;
+    { P::parse_value(sv) } -> Not_same_as<void>;
 };
 
 template<typename P>
@@ -47,8 +52,8 @@ concept Has_false_value = requires {
 };
 
 template<typename P>
-concept Has_append_value = requires(std::string_view sv) {
-    P::append_value(std::declval<decltype(P::value(sv))&>(), sv);
+concept Has_repeated_value_parser = requires(std::string_view sv) {
+    P::parse_repeated_value(std::declval<decltype(P::value(sv))&>(), sv);
 };
 
 } // namespce details_
@@ -73,13 +78,9 @@ concept Bool_parameter =
     details_::Has_false_value<P>;
 
 template<typename P>
-concept Named_parameter =
-    Regular_parameter<P> ||
-    Bool_parameter<P>;
-
-template<typename P>
 concept Parameter =
-    Named_parameter<P> ||
+    Regular_parameter<P> ||
+    Bool_parameter<P> ||
     Positional_parameter<P>;
 
 } // namespace ez::cli::api

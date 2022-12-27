@@ -45,7 +45,7 @@ struct Default_value  {
 };
 
 struct Value_parser {
-    static auto value(std::string_view v) noexcept
+    static auto parse_value(std::string_view v) noexcept
     {
         return std::string{v};
     }

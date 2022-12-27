@@ -91,7 +91,7 @@ struct Value_parser<f, rest...> {
         " at most one 'value-parser function' (several ones are provided)."
     );
 
-    static constexpr decltype(auto) value(std::string_view sv) noexcept(noexcept(f(sv))) {
+    static constexpr decltype(auto) parse_value(std::string_view sv) noexcept(noexcept(f(sv))) {
         return f(sv);
     }
 };
@@ -121,18 +121,17 @@ struct Positional_parameter :
     details_::Value_parser<f...> {
 
 private:
-    using Value_type_ = decltype(details_::Value_parser<f...>::value(std::string_view{}));
+    using Value_type_ = decltype(details_::Value_parser<f...>::parse_value(std::string_view{}));
 
     static_assert(
         ! requires {
             details_::Default_value<f...>::default_value();
         } ||
         requires {
-            {details_::Default_value<f...>::default_value()} -> std::convertible_to<Value_type_>;
+            {details_::Default_value<f...>::default_value()} -> std::same_as<Value_type_>;
         },
 
-        "Return value type of 'default-value function' should be convertible to"
-        " parameter value type."
+        "Return value types of 'default-value function' and 'parse-value function' should match."
     );
 };
 
@@ -152,18 +151,17 @@ struct Regular_parameter :
     details_::Repeated_value_parser<f...> {
 
 private:
-    using Value_type_ = decltype(details_::Value_parser<f...>::value(std::string_view{}));
+    using Value_type_ = decltype(details_::Value_parser<f...>::parse_value(std::string_view{}));
 
     static_assert(
         ! requires {
             details_::Default_value<f...>::default_value();
         } ||
         requires {
-            {details_::Default_value<f...>::default_value()} -> std::convertible_to<Value_type_>;
+            {details_::Default_value<f...>::default_value()} -> std::same_as<Value_type_>;
         },
 
-        "Return value type of 'default-value function' should be convertible to"
-        " parameter value type."
+        "Return value type of 'default-value function' and 'parse-value function' should be same."
     );
 };
 
@@ -186,9 +184,7 @@ private:
     using False_value_type_ = decltype(details_::False_value<f...>::false_value());
 
     static_assert(std::is_same_v<True_value_type_, False_value_type_>,
-        "Bool_parameter::true_value() and Bool_parameter::false_value() return value types"
-        " should be same."
-    );
+        "True value type and False value type should match.");
 };
 
 } // namespace ez::cli

@@ -27,11 +27,16 @@ struct Error {
 
 namespace ez::cli::details_ {
 
+template<typename P>
+concept Nonpositional_parameter =
+    api::Regular_parameter<P> ||
+    api::Bool_parameter<P>;
+
 template<typename...>
 struct Type_list {};
 
 template<api::Parameter P>
-using Is_named_param = std::bool_constant<api::Named_parameter<P>>;
+using Is_named_param = std::bool_constant<Nonpositional_parameter<P>>;
 
 template<api::Parameter P>
 using Is_positional_param = std::bool_constant<api::Positional_parameter<P>>;
@@ -44,7 +49,7 @@ class Token {
 template<api::Bool_parameter P>
 class Token<P> {};
 
-template<typename It, api::Parameter... P, api::Named_parameter... Named_p>
+template<typename It, api::Parameter... P, Nonpositional_parameter... Named_p>
 consteval auto get_named_funcs_impl(Type_list<Named_p...>)
 {
     using Token_variant = std::variant<Token<P>..., Error>;
@@ -120,7 +125,7 @@ consteval auto get_positional_funcs_()
     return get_positional_funcs_impl<P...>(Positional_params_types{});
 }
 
-template<api::Named_parameter... P>
+template<Nonpositional_parameter... P>
 consteval auto get_named_param_tokens_()
 {
     struct Param_token {
@@ -150,7 +155,7 @@ consteval auto get_named_param_tokens_()
     return tokens;
 }
 
-template<api::Named_parameter... P>
+template<Nonpositional_parameter... P>
     requires (sizeof...(P) > 0)
 constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto p, Type_list<P...>) noexcept
 {
@@ -218,7 +223,7 @@ constexpr utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<
         }
         else {
             co_yield Error::Unknown_parameter{};
-            co_return;
+            co_return; // FIXME co_return Error::Unknown_parameter{};
         }
     }
 
