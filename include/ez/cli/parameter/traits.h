@@ -8,12 +8,12 @@ namespace ez::cli::api {
 namespace details_ {
 
 template<Parameter P>
-struct Parameter_value_type_impl {
+struct Param_value_type_impl {
     using type = decltype(P::value(std::declval<std::string_view>()));
 };
 
-template<Named_parameter_without_value P>
-struct Parameter_value_type_impl<P> {
+template<Bool_parameter P>
+struct Param_value_type_impl<P> {
     using type = decltype(P::value());
 };
 
@@ -21,7 +21,7 @@ struct Parameter_value_type_impl<P> {
 
 
 template<Parameter P>
-using Parameter_value_t = typename details_::Parameter_value_type_impl<P>::type;
+using Param_value_t = typename details_::Param_value_type_impl<P>::type;
 
 } // namespace ez::cli::api
 

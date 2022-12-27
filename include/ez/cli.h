@@ -12,7 +12,7 @@
 #include "gsl.h" // temporary
 #include "ez/cli/details_/lexer.h"
 #include "ez/cli/parameter.h"
-#include "ez/cli/parameter_traits.h"
+#include "ez/cli/parameter/traits.h"
 #include "ez/c_string_view.h"
 #include "ez/cli/details_/uninitialized.h"
 #include "ez/utils/generator.h"
@@ -153,7 +153,7 @@ class Cli<P...> {
     };
 
     template<cli::api::Parameter T>
-    using Param_tagged_value = Tagged_value<T, cli::api::Parameter_value_t<T>>;
+    using Param_tagged_value = Tagged_value<T, cli::api::Param_value_t<T>>;
 
 public:
     template<cli::details_::One_of<P...> T>
@@ -202,7 +202,7 @@ public:
 private:
     static constexpr std::variant<Cli, cli::Error> parse_(std::ranges::view auto args)
     {
-        std::tuple<std::optional<cli::api::Parameter_value_t<P>>...> arg_values;
+        std::tuple<std::optional<cli::api::Param_value_t<P>>...> arg_values;
 
         for (auto tok: tokenize<P...>(args)) {
             auto err = utils::match(tok,

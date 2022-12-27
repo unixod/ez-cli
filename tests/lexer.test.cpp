@@ -18,11 +18,21 @@ struct Long_name {
     inline static auto& long_name = str.value;
 };
 
+template<ez::utils::Static_string str>
+struct Unit_name {
+    inline static auto& name = str.value;
+};
+
 template<auto return_value>
 struct Flag_value  {
-    static auto value() noexcept
+    static auto true_value() noexcept
     {
         return return_value;
+    }
+
+    static auto false_value() noexcept
+    {
+        return 0;
     }
 };
 
@@ -85,7 +95,7 @@ struct A_named_param_sl_wd : Short_name<"-h">, Long_name<"--h-parameter">, Value
 struct A_named_param_so_nd_na : Short_name<"-i">, Value_parser {};
 struct A_named_param_so_nd_wa : Short_name<"-j">, Value_parser, Append_value {};
 
-struct A_positional_param : Value_parser {};
+struct A_positional_param : Unit_name<"some">, Value_parser {};
 
 } // namespace
 
@@ -136,61 +146,67 @@ TEST_CASE("Flag")
 {
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_flag_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_long_name<A_flag_so_nd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_so_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_so_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_flag_so_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_so_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_so_nd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_so_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_so_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_so_nd>);
 
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_short_name<A_flag_lo_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_flag_lo_nd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_lo_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_lo_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_lo_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_lo_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_flag_lo_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_lo_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_lo_nd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_lo_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_lo_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_lo_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_lo_nd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_flag_sl_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_flag_sl_nd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_sl_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_sl_nd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_sl_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_sl_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_flag_sl_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_sl_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_sl_nd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_sl_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_sl_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_sl_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_sl_nd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_flag_so_wd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_long_name<A_flag_so_wd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_so_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_so_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_so_wd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_so_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_flag_so_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_so_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_so_wd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_so_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_so_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_so_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_so_wd>);
 
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_short_name<A_flag_lo_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_flag_lo_wd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_lo_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_lo_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_lo_wd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_lo_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_flag_lo_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_lo_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_lo_wd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_lo_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_lo_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_lo_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_lo_wd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_flag_sl_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_flag_sl_wd>);
-    STATIC_REQUIRE(cli::api::details_::Has_value_constructor<A_flag_sl_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_true_value<A_flag_sl_wd>);
+    STATIC_REQUIRE(cli::api::details_::Has_false_value<A_flag_sl_wd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_parser<A_flag_sl_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_flag_sl_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_without_value<A_flag_sl_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_flag_sl_wd>);
+    STATIC_REQUIRE(cli::api::Bool_parameter<A_flag_sl_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_flag_sl_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_flag_sl_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_flag_sl_wd>);
 }
@@ -199,61 +215,67 @@ TEST_CASE("Named parameter")
 {
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_named_param_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_long_name<A_named_param_so_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_so_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_so_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_so_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_named_param_so_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_so_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_so_nd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_so_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_so_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_so_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_so_nd>);
 
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_short_name<A_named_param_lo_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_named_param_lo_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_lo_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_lo_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_lo_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_lo_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_named_param_lo_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_lo_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_lo_nd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_lo_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_lo_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_lo_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_lo_nd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_named_param_sl_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_named_param_sl_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_sl_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_sl_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_sl_nd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_sl_nd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_named_param_sl_nd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_sl_nd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_sl_nd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_sl_nd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_sl_nd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_sl_nd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_sl_nd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_named_param_so_wd>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_long_name<A_named_param_so_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_so_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_so_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_so_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_so_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_named_param_so_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_so_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_so_wd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_so_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_so_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_so_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_so_wd>);
 
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_short_name<A_named_param_lo_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_named_param_lo_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_lo_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_lo_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_lo_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_lo_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_named_param_lo_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_lo_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_lo_wd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_lo_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_lo_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_lo_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_lo_wd>);
 
     STATIC_REQUIRE(cli::api::details_::Has_short_name<A_named_param_sl_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_long_name<A_named_param_sl_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_named_param_sl_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_named_param_sl_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_named_param_sl_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_named_param_sl_wd>);
     STATIC_REQUIRE(cli::api::details_::Has_default_value<A_named_param_sl_wd>);
-    STATIC_REQUIRE(cli::api::Named_parameter_with_value<A_named_param_sl_wd>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_named_param_sl_wd>);
+    STATIC_REQUIRE(cli::api::Regular_parameter<A_named_param_sl_wd>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_named_param_sl_wd>);
     STATIC_REQUIRE_FALSE(cli::api::Positional_parameter<A_named_param_sl_wd>);
     STATIC_REQUIRE(cli::api::Parameter<A_named_param_sl_wd>);
 }
@@ -262,11 +284,12 @@ TEST_CASE("Positional parameter")
 {
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_short_name<A_positional_param>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_long_name<A_positional_param>);
-    STATIC_REQUIRE_FALSE(cli::api::details_::Has_value_constructor<A_positional_param>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_true_value<A_positional_param>);
+    STATIC_REQUIRE_FALSE(cli::api::details_::Has_false_value<A_positional_param>);
     STATIC_REQUIRE(cli::api::details_::Has_value_parser<A_positional_param>);
     STATIC_REQUIRE_FALSE(cli::api::details_::Has_default_value<A_positional_param>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_with_value<A_positional_param>);
-    STATIC_REQUIRE_FALSE(cli::api::Named_parameter_without_value<A_positional_param>);
+    STATIC_REQUIRE_FALSE(cli::api::Regular_parameter<A_positional_param>);
+    STATIC_REQUIRE_FALSE(cli::api::Bool_parameter<A_positional_param>);
     STATIC_REQUIRE(cli::api::Positional_parameter<A_positional_param>);
     STATIC_REQUIRE(cli::api::Parameter<A_positional_param>);
 }
@@ -284,9 +307,9 @@ TEST_CASE("Parameter set is empty")
     REQUIRE_FALSE(is_compiled());
 }
 
-// Named_parameter_without_value -----
+// Bool_parameter -----
 
-TEST_CASE("Parameter set consists of single item satisfying Named_parameter_without_value")
+TEST_CASE("Parameter set consists of single item satisfying Bool_parameter")
 {
     SECTION("Args set is empty => no tokens on out") {
         REQUIRE(std::ranges::distance(details_::tokenize<A_flag_so_nd>({})) == 0);
@@ -311,24 +334,24 @@ TEST_CASE("Parameter set consists of single item satisfying Named_parameter_with
 //        >;
 
 //        static_assert(sizeof(A) != 0);
-//        static_assert(ez::cli::Named_parameter_without_value<A>);
+//        static_assert(ez::cli::Bool_parameter<A>);
 //        details_::tokenize<A, B>({});
     }
 }
 
-TEST_CASE("Parameter set consists of several items satisfying Named_parameter_without_value")
+TEST_CASE("Parameter set consists of several items satisfying Bool_parameter")
 {
 
 }
 
-// Named_parameter_with_value -----
+// Regular_parameter -----
 
-TEST_CASE("Parameter set consists of single item satisfying Named_parameter_with_value")
+TEST_CASE("Parameter set consists of single item satisfying Regular_parameter")
 {
 
 }
 
-TEST_CASE("Parameter set consists of several items satisfying Named_parameter_with_value")
+TEST_CASE("Parameter set consists of several items satisfying Regular_parameter")
 {
 
 }

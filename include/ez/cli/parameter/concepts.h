@@ -1,5 +1,5 @@
-#ifndef EZ_CLI_API_PARAMETER_H
-#define EZ_CLI_API_PARAMETER_H
+#ifndef EZ_CLI_PARAMETER_CONCEPTS_H
+#define EZ_CLI_PARAMETER_CONCEPTS_H
 
 #include <string_view>
 #include "ez/static_string.h"
@@ -10,6 +10,11 @@ namespace details_ {
 
 template<typename T, typename U>
 concept Not_same_as = !std::same_as<T, U>;
+
+template<typename P>
+concept Has_unit_name = requires {
+    { P::name } -> std::convertible_to<std::string_view>;
+};
 
 template<typename P>
 concept Has_short_name = requires {
@@ -32,8 +37,13 @@ concept Has_value_parser = requires(std::string_view sv) {
 };
 
 template<typename P>
-concept Has_value_constructor = requires(std::string_view sv) {
-    { P::value() } -> Not_same_as<void>;
+concept Has_true_value = requires {
+    { P::true_value() } -> Not_same_as<void>;
+};
+
+template<typename P>
+concept Has_false_value = requires {
+    { P::false_value() } -> Not_same_as<void>;
 };
 
 template<typename P>
@@ -43,32 +53,29 @@ concept Has_append_value = requires(std::string_view sv) {
 
 } // namespce details_
 
-// <app> -a --arg
-template<typename P>
-concept Named_parameter_without_value =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    details_::Has_value_constructor<P> &&
-    !details_::Has_value_parser<P> &&
-    (details_::Has_default_value<P> || std::constructible_from<decltype(P::value())>);
-
-// <app> -a=value -a value --arg=value --arg value
-template<typename P>
-concept Named_parameter_with_value =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    !details_::Has_value_constructor<P> &&
-    details_::Has_value_parser<P>;
-
 // <app> value
 template<typename P>
 concept Positional_parameter =
-    !details_::Has_short_name<P> &&
-    !details_::Has_long_name<P> &&
-    details_::Has_value_parser<P>;
+    details_::Has_unit_name<P> &&
+    details_::Has_value_parser<P/*, Param_value_t<P>*/>;
+
+// <app> -a=value -a value --arg=value --arg value
+template<typename P>
+concept Regular_parameter =
+    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
+    details_::Has_value_parser<P/*, Param_value_t<P>*/>;
+
+// <app> -a --arg
+template<typename P>
+concept Bool_parameter =
+    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
+    details_::Has_true_value<P> &&
+    details_::Has_false_value<P>;
 
 template<typename P>
 concept Named_parameter =
-    Named_parameter_with_value<P> ||
-    Named_parameter_without_value<P>;
+    Regular_parameter<P> ||
+    Bool_parameter<P>;
 
 template<typename P>
 concept Parameter =
@@ -77,4 +84,4 @@ concept Parameter =
 
 } // namespace ez::cli::api
 
-#endif // EZ_CLI_API_PARAMETER_H
+#endif // EZ_CLI_PARAMETER_CONCEPTS_H

@@ -41,7 +41,7 @@ class Token {
     utils::C_string_view value_lexeme;
 };
 
-template<api::Named_parameter_without_value P>
+template<api::Bool_parameter P>
 class Token<P> {};
 
 template<typename It, api::Parameter... P, api::Named_parameter... Named_p>
