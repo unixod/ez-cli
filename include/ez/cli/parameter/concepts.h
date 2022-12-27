@@ -56,26 +56,53 @@ concept Has_repeated_value_parser = requires(std::string_view sv) {
     P::parse_repeated_value(std::declval<decltype(P::value(sv))&>(), sv);
 };
 
+template<typename P>
+concept Positional_param =
+    Has_unit_name<P> &&
+    Has_description<P> &&
+    Has_value_parser<P> &&
+    (!Has_default_value<P> || requires(std::string_view sv) {
+        { P::parse_value(sv) } -> std::same_as<decltype(P::default_value())>;
+    });
+
+template<typename P>
+concept Regular_param =
+    (Has_short_name<P> || Has_long_name<P>) &&
+    Has_description<P> &&
+    Has_value_parser<P> &&
+    (!Has_default_value<P> || requires(std::string_view sv) {
+        { P::parse_value(sv) } -> std::same_as<decltype(P::default_value())>;
+    });
+
+template<typename P>
+concept Bool_param =
+    (Has_short_name<P> || Has_long_name<P>) &&
+    Has_description<P> &&
+    Has_true_value<P> &&
+    Has_false_value<P>;
+
 } // namespce details_
 
 // <app> value
 template<typename P>
 concept Positional_parameter =
-    details_::Has_unit_name<P> &&
-    details_::Has_value_parser<P/*, Param_value_t<P>*/>;
+    details_::Positional_param<P> &&
+    !details_::Regular_param<P> &&
+    !details_::Bool_param<P>;
 
 // <app> -a=value -a value --arg=value --arg value
 template<typename P>
 concept Regular_parameter =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    details_::Has_value_parser<P/*, Param_value_t<P>*/>;
+    !details_::Positional_param<P> &&
+    details_::Regular_param<P> &&
+    !details_::Bool_param<P>;
 
 // <app> -a --arg
 template<typename P>
 concept Bool_parameter =
-    (details_::Has_short_name<P> || details_::Has_long_name<P>) &&
-    details_::Has_true_value<P> &&
-    details_::Has_false_value<P>;
+    !details_::Positional_param<P> &&
+    !details_::Regular_param<P> &&
+    details_::Bool_param<P>;
 
 template<typename P>
 concept Parameter =

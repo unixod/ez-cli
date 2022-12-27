@@ -3,20 +3,6 @@
 #include "ez/cli/parameter/traits.h"
 #include "ez/cli/parameter/concepts.h"
 
-template<typename T>
-constexpr auto has_doi() {
-    return requires { T::default_value(); };
-}
-
-using ez::cli::api::details_::Has_short_name;
-using ez::cli::api::details_::Has_long_name;
-using ez::cli::api::details_::Has_unit_name;
-using ez::cli::api::details_::Has_description;
-using ez::cli::api::details_::Has_default_value;
-using ez::cli::api::details_::Has_value_parser;
-using ez::cli::api::details_::Has_true_value;
-using ez::cli::api::details_::Has_false_value;
-using ez::cli::api::details_::Has_repeated_value_parser;
 using ez::cli::api::Positional_parameter;
 using ez::cli::api::Regular_parameter;
 using ez::cli::api::Bool_parameter;
@@ -39,15 +25,6 @@ TEST_CASE("Mandatory ez::cli::Positional_parameter (i.e. has no default value)")
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Bool_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
-    STATIC_REQUIRE_FALSE(Has_short_name<P>);
-    STATIC_REQUIRE_FALSE(Has_long_name<P>);
-    STATIC_REQUIRE(Has_unit_name<P>);
-    STATIC_REQUIRE(Has_description<P>);
-    STATIC_REQUIRE(Has_value_parser<P>);
-    STATIC_REQUIRE_FALSE(Has_default_value<P>);
-    STATIC_REQUIRE_FALSE(Has_true_value<P>);
-    STATIC_REQUIRE_FALSE(Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(Has_repeated_value_parser<P>);
 }
 
 TEST_CASE("Optional ez::cli::Positional_parameter (i.e. has default value)")
@@ -73,15 +50,53 @@ TEST_CASE("Optional ez::cli::Positional_parameter (i.e. has default value)")
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Bool_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
-    STATIC_REQUIRE_FALSE(Has_short_name<P>);
-    STATIC_REQUIRE_FALSE(Has_long_name<P>);
-    STATIC_REQUIRE(Has_unit_name<P>);
-    STATIC_REQUIRE(Has_description<P>);
-    STATIC_REQUIRE(Has_value_parser<P>);
-    STATIC_REQUIRE(Has_default_value<P>);
-    STATIC_REQUIRE_FALSE(Has_true_value<P>);
-    STATIC_REQUIRE_FALSE(Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(Has_repeated_value_parser<P>);
+}
+
+TEST_CASE("Mandatory ez::cli::Regular_parameter (i.e. has no default value)")
+{
+    using P = ez::cli::Regular_parameter<"short-name", "long-name",
+        "The parameter descritption.",
+        [](std::string_view sv) {
+            return sv;
+        }
+    >;
+
+    STATIC_REQUIRE(P::short_name == "short-name");
+    STATIC_REQUIRE(P::long_name == "long-name");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::parse_value("123") == "123");
+
+    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
+    STATIC_REQUIRE(Regular_parameter<P>);
+    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE(Parameter<P>);
+}
+
+struct AmbigousP {
+    static constexpr std::string short_name = "short-some";
+    static constexpr std::string name = "some";
+    static int parse_value(std::string_view) {
+        return 1;
+    }
+};
+
+
+struct TypesDontMatchPpositional {
+    static constexpr std::string name = "some";
+
+    static int parse_value(std::string_view) {
+        return 1;
+    }
+    static char default_value() {
+        return 1;
+    }
+};
+
+TEST_CASE("Ambigous paramter type")
+{
+    STATIC_REQUIRE(!Positional_parameter<AmbigousP>);
+    STATIC_REQUIRE(!Regular_parameter<AmbigousP>);
+    STATIC_REQUIRE(!Positional_parameter<TypesDontMatchPpositional>);
 }
 
 //TEST_CASE("")

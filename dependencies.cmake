@@ -4,7 +4,7 @@ include(FetchContent)
 
 FetchContent_Declare(ez-common
     GIT_REPOSITORY https://github.com/unixod/ez-common.git
-    GIT_TAG v1.2.0
+    GIT_TAG v1.2.1
     GIT_SHALLOW On
 )
 
