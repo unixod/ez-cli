@@ -3,7 +3,7 @@
 
 using ez::cli::api::Positional_parameter;
 using ez::cli::api::Regular_parameter;
-using ez::cli::api::Bool_parameter;
+using ez::cli::api::Boolean_parameter;
 using ez::cli::api::Parameter;
 
 
@@ -24,7 +24,7 @@ TEST_CASE("Ambiguity: param contains necessary minimum of both positional and re
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE_FALSE(Parameter<P>);
 
     namespace details_ = ez::cli::api::details_;
@@ -36,7 +36,7 @@ TEST_CASE("Ambiguity: param contains necessary minimum of both positional and re
     STATIC_REQUIRE_FALSE(details_::Has_default_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(details_::Has_repeated_value_parser<P>);
+    STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
 
@@ -57,7 +57,7 @@ TEST_CASE("Ambiguity: param contains necessary minimum of both positional and re
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE_FALSE(Parameter<P>);
 
     namespace details_ = ez::cli::api::details_;
@@ -69,7 +69,7 @@ TEST_CASE("Ambiguity: param contains necessary minimum of both positional and re
     STATIC_REQUIRE_FALSE(details_::Has_default_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(details_::Has_repeated_value_parser<P>);
+    STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
 struct Ambigous_parameter_3 {
@@ -99,7 +99,7 @@ TEST_CASE("Ambiguity: parameter contains necessary minimum of both positional an
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE_FALSE(Parameter<P>);
 
     namespace details_ = ez::cli::api::details_;
@@ -111,7 +111,7 @@ TEST_CASE("Ambiguity: parameter contains necessary minimum of both positional an
     STATIC_REQUIRE_FALSE(details_::Has_default_value<P>);
     STATIC_REQUIRE(details_::Has_true_value<P>);
     STATIC_REQUIRE(details_::Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(details_::Has_repeated_value_parser<P>);
+    STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
 
@@ -141,7 +141,7 @@ TEST_CASE("Ambiguity: parameter contains necessary minimum of both regular and b
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE_FALSE(Parameter<P>);
 
     namespace details_ = ez::cli::api::details_;
@@ -153,5 +153,5 @@ TEST_CASE("Ambiguity: parameter contains necessary minimum of both regular and b
     STATIC_REQUIRE_FALSE(details_::Has_default_value<P>);
     STATIC_REQUIRE(details_::Has_true_value<P>);
     STATIC_REQUIRE(details_::Has_false_value<P>);
-    STATIC_REQUIRE_FALSE(details_::Has_repeated_value_parser<P>);
+    STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }

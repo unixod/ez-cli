@@ -30,7 +30,7 @@ namespace ez::cli::details_ {
 template<typename P>
 concept Nonpositional_parameter =
     api::Regular_parameter<P> ||
-    api::Bool_parameter<P>;
+    api::Boolean_parameter<P>;
 
 template<typename...>
 struct Type_list {};
@@ -46,7 +46,7 @@ class Token {
     utils::C_string_view value_lexeme;
 };
 
-template<api::Bool_parameter P>
+template<api::Boolean_parameter P>
 class Token<P> {};
 
 template<typename It, api::Parameter... P, Nonpositional_parameter... Named_p>

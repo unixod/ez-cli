@@ -14,21 +14,25 @@ concept Not_same_as = !std::same_as<T, U>;
 template<typename P>
 concept Has_unit_name = requires {
     { P::name } -> std::convertible_to<std::string_view>;
+    requires !std::string_view{P::name}.empty();
 };
 
 template<typename P>
 concept Has_short_name = requires {
     { P::short_name } -> std::convertible_to<std::string_view>;
+    requires !std::string_view{P::short_name}.empty();
 };
 
 template<typename P>
 concept Has_long_name = requires {
     { P::long_name } -> std::convertible_to<std::string_view>;
+    requires !std::string_view{P::long_name}.empty();
 };
 
 template<typename P>
 concept Has_description = requires {
     { P::description } -> std::convertible_to<std::string_view>;
+    requires !std::string_view{P::description}.empty();
 };
 
 template<typename P>
@@ -52,34 +56,55 @@ concept Has_false_value = requires {
 };
 
 template<typename P>
-concept Has_repeated_value_parser = requires(std::string_view sv) {
-    P::parse_repeated_value(std::declval<decltype(P::value(sv))&>(), sv);
+concept Default_value_type_matches_parsed_value_type = requires(std::string_view sv) {
+    { P::parse_value(sv) } -> std::same_as<decltype(P::default_value())>;
 };
+
+struct Mimic {
+    template<typename T>
+    constexpr operator T&() const noexcept;
+
+    template<typename T>
+    constexpr operator T&&() const noexcept;
+
+    static Mimic& value();
+};
+
+template<typename P>
+concept Has_parse_repeated_value_alike = requires(std::string_view arg) {
+    P::parse_repeated_value(Mimic::value(), arg);
+};
+
+template<typename P>
+concept Has_parse_repeated_value =
+    requires(std::string_view arg, decltype(P::parse_value(arg)) accumulator) {
+        P::parse_repeated_value(accumulator, arg);
+    };
 
 template<typename P>
 concept Positional_param =
     Has_unit_name<P> &&
     Has_description<P> &&
     Has_value_parser<P> &&
-    (!Has_default_value<P> || requires(std::string_view sv) {
-        { P::parse_value(sv) } -> std::same_as<decltype(P::default_value())>;
-    });
+    (!Has_default_value<P> || Default_value_type_matches_parsed_value_type<P>);
 
 template<typename P>
 concept Regular_param =
     (Has_short_name<P> || Has_long_name<P>) &&
     Has_description<P> &&
     Has_value_parser<P> &&
-    (!Has_default_value<P> || requires(std::string_view sv) {
-        { P::parse_value(sv) } -> std::same_as<decltype(P::default_value())>;
-    });
+    (!Has_default_value<P> || Default_value_type_matches_parsed_value_type<P>) &&
+    (!Has_parse_repeated_value_alike<P> || Has_parse_repeated_value<P>);
 
 template<typename P>
 concept Bool_param =
     (Has_short_name<P> || Has_long_name<P>) &&
     Has_description<P> &&
     Has_true_value<P> &&
-    Has_false_value<P>;
+    Has_false_value<P> &&
+    requires {
+        { P::false_value() } -> std::same_as<decltype(P::true_value())>;
+    };
 
 } // namespce details_
 
@@ -99,7 +124,7 @@ concept Regular_parameter =
 
 // <app> -a --arg
 template<typename P>
-concept Bool_parameter =
+concept Boolean_parameter =
     !details_::Positional_param<P> &&
     !details_::Regular_param<P> &&
     details_::Bool_param<P>;
@@ -107,7 +132,7 @@ concept Bool_parameter =
 template<typename P>
 concept Parameter =
     Regular_parameter<P> ||
-    Bool_parameter<P> ||
+    Boolean_parameter<P> ||
     Positional_parameter<P>;
 
 } // namespace ez::cli::api

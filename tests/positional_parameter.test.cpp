@@ -1,4 +1,5 @@
 #include <catch2/catch_all.hpp>
+#include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
 
 using ez::cli::api::Positional_parameter;
@@ -7,20 +8,14 @@ using ez::cli::api::Boolean_parameter;
 using ez::cli::api::Parameter;
 using namespace std::string_view_literals;
 
-
-struct Mandatory_positional_parameter {
-    static constexpr auto name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
-
-    static constexpr auto parse_value(std::string_view arg)
-    {
-        return arg;
-    }
-};
-
 TEST_CASE("Positional parameter may specify no default value (i.e. mandatory parameter)")
 {
-    using P = Mandatory_positional_parameter;
+    using P = ez::cli::Positional_parameter<"some-param",
+        "A description of the param.",
+        [](auto sv) {
+            return sv;
+        }
+    >;
 
     STATIC_REQUIRE(P::name == "some-param");
     STATIC_REQUIRE(P::description == "A description of the param.");
@@ -43,24 +38,17 @@ TEST_CASE("Positional parameter may specify no default value (i.e. mandatory par
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Mandatory_repeated_positional_param {
-    static constexpr auto name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
-
-    static constexpr auto parse_value(std::string_view arg)
-    {
-        return std::vector{arg};
-    }
-
-    static constexpr void parse_repeated_value(auto& values, std::string_view arg)
-    {
-        values.push_back(arg);
-    }
-};
-
 TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
 {
-    using P = Mandatory_repeated_positional_param;
+    using P = ez::cli::Positional_parameter<"some-param",
+        "A description of the param.",
+        [](std::string_view arg) {
+            return std::vector{arg};
+        },
+        [](auto& values, std::string_view arg) {
+            values.push_back(arg);
+        }
+    >;
 
     STATIC_REQUIRE(P::name == "some-param");
     STATIC_REQUIRE(P::description == "A description of the param.");
@@ -86,24 +74,17 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
     STATIC_REQUIRE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Optional_positional_parameter {
-    static constexpr auto name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
-
-    static constexpr auto parse_value(std::string_view arg)
-    {
-        return arg;
-    }
-
-    static constexpr auto default_value()
-    {
-        return "default-value"sv;
-    }
-};
-
 TEST_CASE("Positional parameter may specify default value (i.e. optional parameter)")
 {
-    using P = Optional_positional_parameter;
+    using P = ez::cli::Positional_parameter<"some-param",
+        "A description of the param.",
+        [](auto sv) {
+            return sv;
+        },
+        []{
+            return "default-value"sv;
+        }
+    >;
 
     STATIC_REQUIRE(P::name == "some-param");
     STATIC_REQUIRE(P::description == "A description of the param.");
@@ -127,29 +108,20 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Optional_repeated_positional_parameter {
-    static constexpr auto name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
-
-    static constexpr auto parse_value(std::string_view arg)
-    {
-        return std::vector{arg};
-    }
-
-    static constexpr auto default_value()
-    {
-        return std::vector{"default-value"sv};
-    }
-
-    static constexpr void parse_repeated_value(auto& values, std::string_view arg)
-    {
-        values.push_back(arg);
-    }
-};
-
-TEST_CASE("Optional regular parameter may specify allowance for repetition")
+TEST_CASE("Optional positional parameter may specify allowance for repetition")
 {
-    using P = Optional_repeated_positional_parameter;
+    using P = ez::cli::Positional_parameter<"some-param",
+        "A description of the param.",
+        [](std::string_view arg) {
+            return std::vector{arg};
+        },
+        [](auto& values, std::string_view arg) {
+            values.push_back(arg);
+        },
+        []{
+            return std::vector{"default-value"sv};
+        }
+    >;
 
     STATIC_REQUIRE(P::name == "some-param");
     STATIC_REQUIRE(P::description == "A description of the param.");
@@ -175,89 +147,66 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition")
     STATIC_REQUIRE(details_::Has_parse_repeated_value<P>);
 }
 
-// Testing of incorrect parameter types detection. ------------------
-
 namespace {
 
-template<ez::utils::Static_string str>
-struct Mock_name {
-    static constexpr auto name = std::string_view{str.value};
-};
-
-template<ez::utils::Static_string str>
-struct Mock_description {
-    static constexpr auto description = std::string_view{str.value};
-};
-
-template<auto f>
-struct Mock_parse_value_func {
-    static constexpr auto parse_value(auto arg)
-    {
-        return f(arg);
-    }
-};
-
-template<auto f>
-struct Mock_default_value_func {
-    static constexpr auto default_value()
-    {
-        return f();
-    }
-};
-
-
-template<typename... Properties>
-struct Compose_test_param : Properties... {};
-
-
 using Incorrect_parameter_types = std::tuple<
-    // Paremeter name is empty string.
-    Compose_test_param<
-        Mock_name<"">,
-        Mock_description<"The parameter description">,
-        Mock_parse_value_func<[](auto arg) { return arg; }>
+    // A parameter name is missing (empty string).
+    ez::cli::Positional_parameter<"",
+        "A descritption of the param.",
+        [](auto arg) {
+            return arg;
+        }
     >,
 
-    // Parameter name is missing.
-    Compose_test_param<
-        /* Mock_name<"some-param">, */
-        Mock_description<"The parameter description">,
-        Mock_parse_value_func<[](auto arg) { return arg; }>
+    // A parameter description is missing (empty string).
+    ez::cli::Positional_parameter<"some-param",
+        "",
+        [](auto arg) {
+            return arg;
+        }
     >,
 
-    // Paremeter description is empty string.
-    Compose_test_param<
-        Mock_name<"some-param">,
-        Mock_description<"">,
-        Mock_parse_value_func<[](auto arg) { return arg; }>
+    // An argument value parsing funciton is missing.
+    ez::cli::Positional_parameter<"some-param",
+        "A descritption of the param."
     >,
 
-    // Parameter description is missing.
-    Compose_test_param<
-        Mock_name<"some-param">,
-        /* Mock_description<"The parameter description">, */
-        Mock_parse_value_func<[](auto arg) { return arg; }>
+    //==-----------------------------------------------==//
+    //  Ditto as above but with default value specified  //
+    //==-----------------------------------------------==//
+
+    // A parameter name is missing (empty string).
+    ez::cli::Positional_parameter<"",
+        "A descritption of the param.",
+        [](auto arg) {
+            return arg;
+        },
+        [] {
+            return "default value"sv;
+        }
     >,
 
-    // Parameter value parsing function is missing.
-    Compose_test_param<
-        Mock_name<"some-param">,
-        Mock_description<"The parameter description">
-        /* Mock_parse_value_func<[](auto arg) { return arg; }>, */
+    // A parameter description is missing (empty string).
+    ez::cli::Positional_parameter<"some-param",
+        "",
+        [](auto arg) {
+            return arg;
+        },
+        [] {
+            return "default value"sv;
+        }
     >,
 
-    // Parameter default value type doesn't match return value type of
-    // the parameter value parsing function.
-    Compose_test_param<
-        Mock_name<"some-param">,
-        Mock_description<"The parameter description">,
-        Mock_parse_value_func<[](auto) { return "parsed-value"; }>,
-        Mock_default_value_func<[] { return 3; }>
+    // An argument value parsing funciton is missing.
+    ez::cli::Positional_parameter<"some-param",
+        "A descritption of the param.",
+        [] {
+            return "default value"sv;
+        }
     >
 >;
 
 } // namespace
-
 
 TEMPLATE_LIST_TEST_CASE("Incorrect positional parameter spec", "", Incorrect_parameter_types)
 {
@@ -271,3 +220,4 @@ TEMPLATE_LIST_TEST_CASE("Incorrect positional parameter spec", "", Incorrect_par
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE_FALSE(Parameter<P>);
 }
+

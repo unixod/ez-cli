@@ -12,7 +12,7 @@ struct Param_value_type_impl {
     using type = decltype(P::value(std::declval<std::string_view>()));
 };
 
-template<Bool_parameter P>
+template<Boolean_parameter P>
 struct Param_value_type_impl<P> {
     using type = decltype(P::value());
 };

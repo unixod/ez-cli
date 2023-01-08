@@ -5,52 +5,8 @@
 
 using ez::cli::api::Positional_parameter;
 using ez::cli::api::Regular_parameter;
-using ez::cli::api::Bool_parameter;
+using ez::cli::api::Boolean_parameter;
 using ez::cli::api::Parameter;
-
-TEST_CASE("Mandatory ez::cli::Positional_parameter (i.e. has no default value)")
-{
-    using P = ez::cli::Positional_parameter<"some-param",
-        "The some-param descritption.",
-        [](std::string_view sv) {
-            return sv;
-        }
-    >;
-
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The some-param descritption.");
-    STATIC_REQUIRE(P::parse_value("123") == "123");
-
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
-}
-
-TEST_CASE("Optional ez::cli::Positional_parameter (i.e. has default value)")
-{
-    using namespace std::string_view_literals;
-
-    using P = ez::cli::Positional_parameter<"some-param",
-        "The some-param descritption.",
-        []() {
-            return "default-value"sv;
-        },
-        [](std::string_view sv) {
-            return sv;
-        }
-    >;
-
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The some-param descritption.");
-    REQUIRE(P::default_value() == "default-value");
-    REQUIRE(P::parse_value("123") == "123");
-
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
-}
 
 TEST_CASE("Mandatory ez::cli::Regular_parameter (i.e. has no default value)")
 {
@@ -68,7 +24,7 @@ TEST_CASE("Mandatory ez::cli::Regular_parameter (i.e. has no default value)")
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Bool_parameter<P>);
+    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 }
 
