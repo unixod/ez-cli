@@ -25,5 +25,8 @@ addTest("Custom positional parameter" custom_positional_parameter
 addTest("Custom regular parameter" custom_regular_parameter
     LIBS ez::cli ez::cli::tests_config)
 
+addTest("Custom boolean parameter" custom_boolean_parameter
+    LIBS ez::cli ez::cli::tests_config)
+
 addTest("Ambiguous custom parameter" ambiguous_custom_parameter
     LIBS ez::cli ez::cli::tests_config)
