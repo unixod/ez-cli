@@ -2,12 +2,12 @@
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
 
-using ez::cli::api::Positional_parameter;
-using ez::cli::api::Regular_parameter;
-using ez::cli::api::Boolean_parameter;
-using ez::cli::api::Parameter;
+using ez::cli::concepts::Positional_parameter;
+using ez::cli::concepts::Regular_parameter;
+using ez::cli::concepts::Boolean_parameter;
+using ez::cli::concepts::Parameter;
+using ez::cli::traits::Param_value_t;
 using namespace std::string_view_literals;
-using namespace std::string_literals;
 
 TEST_CASE("Boolean parameter may have only short name")
 {
@@ -25,13 +25,14 @@ TEST_CASE("Boolean parameter may have only short name")
     STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::true_value() == 123);
     STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -59,13 +60,14 @@ TEST_CASE("Boolean parameter may have only long name")
     STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::true_value() == 123);
     STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -94,13 +96,14 @@ TEST_CASE("Boolean parameter may have both short and long names")
     STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::true_value() == 123);
     STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);

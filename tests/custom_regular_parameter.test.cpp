@@ -1,17 +1,17 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter/concepts.h"
 
-using ez::cli::api::Positional_parameter;
-using ez::cli::api::Regular_parameter;
-using ez::cli::api::Boolean_parameter;
-using ez::cli::api::Parameter;
+using ez::cli::concepts::Positional_parameter;
+using ez::cli::concepts::Regular_parameter;
+using ez::cli::concepts::Boolean_parameter;
+using ez::cli::concepts::Parameter;
 using namespace std::string_view_literals;
 using namespace std::string_literals;
 
 
 struct Mandatory_regular_parameter_1 {
-    static constexpr auto short_name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto short_name = "short-name"sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -23,16 +23,12 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 {
     using P = Mandatory_regular_parameter_1;
 
-    STATIC_REQUIRE(P::short_name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("123") == "123");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -45,8 +41,8 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 }
 
 struct Mandatory_regular_parameter_2 {
-    static constexpr auto long_name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto long_name = "long-name"sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -58,16 +54,12 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 {
     using P = Mandatory_regular_parameter_2;
 
-    STATIC_REQUIRE(P::long_name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("123") == "123");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -82,7 +74,7 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 struct Mandatory_regular_parameter_3 {
     static constexpr auto short_name = "short-name"sv;
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -94,17 +86,12 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 {
     using P = Mandatory_regular_parameter_3;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("123") == "123");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -117,8 +104,8 @@ TEST_CASE("Regular parameter may specify no default value (i.e. mandatory parame
 }
 
 struct Mandatory_repeated_regular_param_1 {
-    static constexpr auto short_name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto short_name = "short-param"sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -135,19 +122,12 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
 {
     using P = Mandatory_repeated_regular_param_1;
 
-    STATIC_REQUIRE(P::short_name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "abc");
-    REQUIRE(vs == std::vector{"abc"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -160,8 +140,8 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
 }
 
 struct Mandatory_repeated_regular_param_2 {
-    static constexpr auto long_name = "some-param"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto long_name = "long-param"sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -178,19 +158,12 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
 {
     using P = Mandatory_repeated_regular_param_2;
 
-    STATIC_REQUIRE(P::long_name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    REQUIRE(P::parse_value("123") == std::vector{"123"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "abc");
-    REQUIRE(vs == std::vector{"abc"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -205,7 +178,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
 struct Mandatory_repeated_regular_param_3 {
     static constexpr auto short_name = "short-name"sv;
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -222,20 +195,12 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
 {
     using P = Mandatory_repeated_regular_param_3;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    REQUIRE(P::parse_value("123") == std::vector{"123"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "abc");
-    REQUIRE(vs == std::vector{"abc"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -249,7 +214,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
 
 struct Optional_regular_parameter_1 {
     static constexpr auto short_name = "short-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -266,17 +231,12 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
 {
     using P = Optional_regular_parameter_1;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("456") == "456");
-    STATIC_REQUIRE(P::default_value() == "default-value");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -290,7 +250,7 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
 
 struct Optional_regular_parameter_2 {
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -307,17 +267,12 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
 {
     using P = Optional_regular_parameter_2;
 
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("456") == "456");
-    STATIC_REQUIRE(P::default_value() == "default-value");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -332,7 +287,7 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
 struct Optional_regular_parameter_3 {
     static constexpr auto short_name = "short-name"sv;
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -349,18 +304,12 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
 {
     using P = Optional_regular_parameter_3;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    STATIC_REQUIRE(P::parse_value("456") == "456");
-    STATIC_REQUIRE(P::default_value() == "default-value");
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -372,10 +321,9 @@ TEST_CASE("Regular parameter may specify a default value (i.e. optional paramete
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-
 struct Optional_repeated_regular_param_1 {
     static constexpr auto short_name = "short-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -397,20 +345,12 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
 {
     using P = Optional_repeated_regular_param_1;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    REQUIRE(P::parse_value("456") == std::vector{"456"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "789");
-    REQUIRE(vs == std::vector{"789"sv});
-    STATIC_REQUIRE(P::default_value() == std::vector{"default-value"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -424,7 +364,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
 
 struct Optional_repeated_regular_param_2 {
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -446,20 +386,12 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
 {
     using P = Optional_repeated_regular_param_2;
 
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    REQUIRE(P::parse_value("456") == std::vector{"456"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "789");
-    REQUIRE(vs == std::vector{"789"sv});
-    STATIC_REQUIRE(P::default_value() == std::vector{"default-value"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -474,7 +406,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
 struct Optional_repeated_regular_param_3 {
     static constexpr auto short_name = "short-name"sv;
     static constexpr auto long_name = "long-name"sv;
-    static constexpr auto description = "A description of the param."sv;
+    static constexpr auto description = "The parameter descritption."sv;
 
     static constexpr auto parse_value(std::string_view arg)
     {
@@ -496,21 +428,12 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 3")
 {
     using P = Optional_repeated_regular_param_3;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
-    REQUIRE(P::parse_value("456") == std::vector{"456"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "789");
-    REQUIRE(vs == std::vector{"789"sv});
-    STATIC_REQUIRE(P::default_value() == std::vector{"default-value"sv});
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);

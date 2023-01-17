@@ -38,7 +38,7 @@ namespace details_ {
 template<typename>
 struct Single_version_cli : std::false_type {};
 
-template<cli::api::Parameter... P>
+template<cli::concepts::Parameter... P>
 struct Single_version_cli<Cli<P...>> : std::true_type {};
 } // namespace details_
 
@@ -136,7 +136,7 @@ private:
 // - implement assignment operators
 // - think about returning from lexer std::optional instead of -1
 //
-template<cli::api::Parameter... P>
+template<cli::concepts::Parameter... P>
 class Cli<P...> {    
 //    template<typename T>
 //    using Is_positional_param = std::bool_constant<cli::Positional_parameter<T>>;
@@ -152,8 +152,8 @@ class Cli<P...> {
         Value_type value;
     };
 
-    template<cli::api::Parameter T>
-    using Param_tagged_value = Tagged_value<T, cli::api::Param_value_t<T>>;
+    template<cli::concepts::Parameter T>
+    using Param_tagged_value = Tagged_value<T, cli::traits::Param_value_t<T>>;
 
 public:
     template<cli::details_::One_of<P...> T>
@@ -202,7 +202,7 @@ public:
 private:
     static constexpr std::variant<Cli, cli::Error> parse_(std::ranges::view auto args)
     {
-        std::tuple<std::optional<cli::api::Param_value_t<P>>...> arg_values;
+        std::tuple<std::optional<cli::traits::Param_value_t<P>>...> arg_values;
 
         for (auto tok: tokenize<P...>(args)) {
             auto err = utils::match(tok,

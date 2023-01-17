@@ -5,23 +5,23 @@
 
 namespace ez::cli::api {
 
-namespace details_ {
+//namespace details_ {
 
-template<Parameter P>
-struct Param_value_type_impl {
-    using type = decltype(P::value(std::declval<std::string_view>()));
-};
+//template<Parameter P>
+//struct Param_value_type_impl {
+//    using type = decltype(P::value(std::declval<std::string_view>()));
+//};
 
-template<Boolean_parameter P>
-struct Param_value_type_impl<P> {
-    using type = decltype(P::value());
-};
+//template<Boolean_parameter P>
+//struct Param_value_type_impl<P> {
+//    using type = decltype(P::value());
+//};
 
-} // namespce details_
+//} // namespce details_
 
 
-template<Parameter P>
-using Param_value_t = typename details_::Param_value_type_impl<P>::type;
+//template<Parameter P>
+//using Param_value_t = typename details_::Param_value_type_impl<P>::type;
 
 } // namespace ez::cli::api
 

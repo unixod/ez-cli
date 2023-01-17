@@ -2,23 +2,23 @@
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
 
-using ez::cli::api::Positional_parameter;
-using ez::cli::api::Regular_parameter;
-using ez::cli::api::Boolean_parameter;
-using ez::cli::api::Parameter;
+using ez::cli::concepts::Positional_parameter;
+using ez::cli::concepts::Regular_parameter;
+using ez::cli::concepts::Boolean_parameter;
+using ez::cli::concepts::Parameter;
 using namespace std::string_view_literals;
 
 TEST_CASE("Positional parameter may specify no default value (i.e. mandatory parameter)")
 {
     using P = ez::cli::Positional_parameter<"some-param",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto sv) {
             return sv;
         }
     >;
 
     STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE(Positional_parameter<P>);
@@ -26,7 +26,7 @@ TEST_CASE("Positional parameter may specify no default value (i.e. mandatory par
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE(details_::Has_unit_name<P>);
@@ -41,7 +41,7 @@ TEST_CASE("Positional parameter may specify no default value (i.e. mandatory par
 TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
 {
     using P = ez::cli::Positional_parameter<"some-param",
-        "A description of the param.",
+        "The parameter descritption.",
         [](std::string_view arg) {
             return std::vector{arg};
         },
@@ -51,7 +51,7 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
     >;
 
     STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "abc");
@@ -62,7 +62,7 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE(details_::Has_unit_name<P>);
@@ -77,7 +77,7 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
 TEST_CASE("Positional parameter may specify default value (i.e. optional parameter)")
 {
     using P = ez::cli::Positional_parameter<"some-param",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto sv) {
             return sv;
         },
@@ -87,7 +87,7 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
     >;
 
     STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("456") == "456");
     STATIC_REQUIRE(P::default_value() == "default-value");
 
@@ -96,7 +96,7 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE(details_::Has_unit_name<P>);
@@ -111,7 +111,7 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
 TEST_CASE("Optional positional parameter may specify allowance for repetition")
 {
     using P = ez::cli::Positional_parameter<"some-param",
-        "A description of the param.",
+        "The parameter descritption.",
         [](std::string_view arg) {
             return std::vector{arg};
         },
@@ -124,7 +124,7 @@ TEST_CASE("Optional positional parameter may specify allowance for repetition")
     >;
 
     STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "abc");
@@ -135,7 +135,7 @@ TEST_CASE("Optional positional parameter may specify allowance for repetition")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE(details_::Has_unit_name<P>);

@@ -15,12 +15,12 @@ struct Error {
     struct Unknown_parameter {
     };
 
-    template<api::Parameter, utils::Static_string>
+    template<concepts::Parameter, utils::Static_string>
     struct Parameter_misuse {};
 
     Error(Unknown_parameter) {};
 
-    template<api::Parameter P, utils::Static_string msg>
+    template<concepts::Parameter P, utils::Static_string msg>
     Error(Parameter_misuse<P, msg>) {}
 };
 } // namespace ez::cli
@@ -29,27 +29,27 @@ namespace ez::cli::details_ {
 
 template<typename P>
 concept Nonpositional_parameter =
-    api::Regular_parameter<P> ||
-    api::Boolean_parameter<P>;
+    concepts::Regular_parameter<P> ||
+    concepts::Boolean_parameter<P>;
 
 template<typename...>
 struct Type_list {};
 
-template<api::Parameter P>
+template<concepts::Parameter P>
 using Is_named_param = std::bool_constant<Nonpositional_parameter<P>>;
 
-template<api::Parameter P>
-using Is_positional_param = std::bool_constant<api::Positional_parameter<P>>;
+template<concepts::Parameter P>
+using Is_positional_param = std::bool_constant<concepts::Positional_parameter<P>>;
 
-template<api::Parameter>
+template<concepts::Parameter>
 class Token {
     utils::C_string_view value_lexeme;
 };
 
-template<api::Boolean_parameter P>
+template<concepts::Boolean_parameter P>
 class Token<P> {};
 
-template<typename It, api::Parameter... P, Nonpositional_parameter... Named_p>
+template<typename It, concepts::Parameter... P, Nonpositional_parameter... Named_p>
 consteval auto get_named_funcs_impl(Type_list<Named_p...>)
 {
     using Token_variant = std::variant<Token<P>..., Error>;
@@ -67,7 +67,7 @@ consteval auto get_named_funcs_impl(Type_list<Named_p...>)
             assert(args_begin != args_end);
             assert(*p_end == '\0' || *p_end == '=');
 
-            if constexpr (!api::details_::Has_value_parser<Named_p>) {
+            if constexpr (!concepts::details_::Has_value_parser<Named_p>) {
                 if (*p_end == '=') {
                     return R{
                         Error::Parameter_misuse<Named_p, "Parameter doesn't accept values">{},
@@ -93,7 +93,7 @@ consteval auto get_named_funcs_impl(Type_list<Named_p...>)
     };
 }
 
-template<typename It, api::Parameter... P>
+template<typename It, concepts::Parameter... P>
 consteval auto get_named_funcs_()
 {
     using Named_param_types =
@@ -102,7 +102,7 @@ consteval auto get_named_funcs_()
     return get_named_funcs_impl<It, P...>(Named_param_types{});
 }
 
-template<api::Parameter... P, api::Positional_parameter... Positional_p>
+template<concepts::Parameter... P, concepts::Positional_parameter... Positional_p>
 consteval auto get_positional_funcs_impl(Type_list<Positional_p...>)
 {
     using Token_variant = std::variant<Token<P>..., Error>;
@@ -116,7 +116,7 @@ consteval auto get_positional_funcs_impl(Type_list<Positional_p...>)
     };
 }
 
-template<api::Parameter... P>
+template<concepts::Parameter... P>
 consteval auto get_positional_funcs_()
 {
     using Positional_params_types =
@@ -133,8 +133,8 @@ consteval auto get_named_param_tokens_()
         const char* lexeme_begin;
     };
 
-    using api::details_::Has_short_name;
-    using api::details_::Has_long_name;
+    using concepts::details_::Has_short_name;
+    using concepts::details_::Has_long_name;
     constexpr auto num_of_tokens = ((Has_short_name<P> + Has_long_name<P>) + ... + 0);
 
     std::size_t token_index = 0;
@@ -187,7 +187,7 @@ constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto p, 
     return std::pair{std::nullopt, p};
 }
 
-template<api::Parameter... P>
+template<concepts::Parameter... P>
     requires (sizeof...(P) > 0)
 constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto lexeme) noexcept
 {
@@ -197,7 +197,7 @@ constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto lex
     return recognize_<P...>(lexeme, Named_params_types{});
 }
 
-template<api::Parameter... P>
+template<concepts::Parameter... P>
     requires (sizeof...(P) > 0)
 constexpr utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char*> args)
 {

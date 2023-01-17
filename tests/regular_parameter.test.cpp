@@ -2,24 +2,24 @@
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
 
-using ez::cli::api::Positional_parameter;
-using ez::cli::api::Regular_parameter;
-using ez::cli::api::Boolean_parameter;
-using ez::cli::api::Parameter;
+using ez::cli::concepts::Positional_parameter;
+using ez::cli::concepts::Regular_parameter;
+using ez::cli::concepts::Boolean_parameter;
+using ez::cli::concepts::Parameter;
 using namespace std::string_view_literals;
 using namespace std::string_literals;
 
 TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only short name")
 {
     using P = ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         }
     >;
 
     STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -27,7 +27,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -42,14 +42,14 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only
 TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only long name")
 {
     using P = ez::cli::Regular_parameter<"", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         }
     >;
 
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -57,7 +57,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -72,7 +72,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have only
 TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have both long&short names")
 {
     using P = ez::cli::Regular_parameter<"short-name", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         }
@@ -80,7 +80,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have both
 
     STATIC_REQUIRE(P::short_name == "short-name");
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -88,7 +88,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have both
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -103,7 +103,7 @@ TEST_CASE("Mandatory regular parameter (i.e. has no default value) may have both
 TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
 {
     using P = ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](std::string_view arg) {
             return std::vector{arg};
         },
@@ -113,7 +113,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
     >;
 
     STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "abc");
@@ -124,7 +124,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -139,7 +139,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 1")
 TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
 {
     using P = ez::cli::Regular_parameter<"", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](std::string_view arg) {
             return std::vector{arg};
         },
@@ -150,7 +150,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
 
     STATIC_REQUIRE(P::short_name == "");
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     REQUIRE(P::parse_value("123") == std::vector{"123"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "abc");
@@ -161,7 +161,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -176,7 +176,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 2")
 TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
 {
     using P = ez::cli::Regular_parameter<"short-name", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](std::string_view arg) {
             return std::vector{arg};
         },
@@ -187,7 +187,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
 
     STATIC_REQUIRE(P::short_name == "short-name");
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     REQUIRE(P::parse_value("123") == std::vector{"123"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "abc");
@@ -198,7 +198,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -213,7 +213,7 @@ TEST_CASE("Mandatory regular parameter may specify allowance for repetition 3")
 TEST_CASE("Optional regular parameter (i.e. has default value) may have only short name")
 {
     using P = ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         },
@@ -223,7 +223,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only sho
     >;
 
     STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -231,7 +231,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only sho
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -246,7 +246,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only sho
 TEST_CASE("Optional regular parameter (i.e. has default value) may have only long name")
 {
     using P = ez::cli::Regular_parameter<"", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         },
@@ -256,7 +256,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only lon
     >;
 
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -264,7 +264,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only lon
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -279,7 +279,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have only lon
 TEST_CASE("Optional regular parameter (i.e. has default value) may have both long&short names")
 {
     using P = ez::cli::Regular_parameter<"short-name", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         },
@@ -290,7 +290,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have both lon
 
     STATIC_REQUIRE(P::short_name == "short-name");
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
@@ -298,7 +298,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have both lon
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -313,7 +313,7 @@ TEST_CASE("Optional regular parameter (i.e. has default value) may have both lon
 TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
 {
     using P = ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return std::vector{arg};
         },
@@ -326,7 +326,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
     >;
 
     STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     REQUIRE(P::parse_value("456") == std::vector{"456"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "789");
@@ -338,7 +338,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -353,7 +353,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 1")
 TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
 {
     using P = ez::cli::Regular_parameter<"", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return std::vector{arg};
         },
@@ -366,7 +366,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
     >;
 
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     REQUIRE(P::parse_value("456") == std::vector{"456"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "789");
@@ -378,7 +378,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -393,7 +393,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 2")
 TEST_CASE("Optional regular parameter may specify allowance for repetition 3")
 {
     using P = ez::cli::Regular_parameter<"short-name", "long-name",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return std::vector{arg};
         },
@@ -407,7 +407,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 3")
 
     STATIC_REQUIRE(P::short_name == "short-name");
     STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "A description of the param.");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
     REQUIRE(P::parse_value("456") == std::vector{"456"sv});
     std::vector<std::string_view> vs;
     P::parse_repeated_value(vs, "789");
@@ -419,7 +419,7 @@ TEST_CASE("Optional regular parameter may specify allowance for repetition 3")
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
 
-    namespace details_ = ez::cli::api::details_;
+    namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
     STATIC_REQUIRE(details_::Has_long_name<P>);
     STATIC_REQUIRE_FALSE(details_::Has_unit_name<P>);
@@ -436,7 +436,7 @@ namespace {
 using Incorrect_parameter_types = std::tuple<
     // Both short and long parameter names are missing (empty strings).
     ez::cli::Regular_parameter<"", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) { return arg; }
     >,
 
@@ -458,7 +458,7 @@ using Incorrect_parameter_types = std::tuple<
 
     // An argument value parsing funciton is missing.
     ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param."
+        "The parameter descritption."
     >,
 
     //==-----------------------------------------------==//
@@ -467,7 +467,7 @@ using Incorrect_parameter_types = std::tuple<
 
     // Both short and long parameter names are missing (empty strings).
     ez::cli::Regular_parameter<"", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [](auto arg) {
             return arg;
         },
@@ -500,7 +500,7 @@ using Incorrect_parameter_types = std::tuple<
 
     // An argument value-parser funciton is missing.
     ez::cli::Regular_parameter<"short-name", "",
-        "A description of the param.",
+        "The parameter descritption.",
         [] {
             return "default value"sv;
         }
