@@ -1,11 +1,13 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
+#include "ez/cli/parameter/traits.h"
 
 using ez::cli::concepts::Positional_parameter;
 using ez::cli::concepts::Regular_parameter;
 using ez::cli::concepts::Boolean_parameter;
 using ez::cli::concepts::Parameter;
+using ez::cli::traits::Param_value_t;
 using namespace std::string_view_literals;
 
 TEST_CASE("Positional parameter may specify no default value (i.e. mandatory parameter)")
@@ -16,10 +18,6 @@ TEST_CASE("Positional parameter may specify no default value (i.e. mandatory par
             return sv;
         }
     >;
-
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::parse_value("123") == "123");
 
     STATIC_REQUIRE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
@@ -36,6 +34,11 @@ TEST_CASE("Positional parameter may specify no default value (i.e. mandatory par
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::name == "some-param");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::parse_value("123") == "123");
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, std::string_view>);
 }
 
 TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
@@ -49,13 +52,6 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
             values.push_back(arg);
         }
     >;
-
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "abc");
-    REQUIRE(vs == std::vector{"abc"sv});
 
     STATIC_REQUIRE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
@@ -72,6 +68,14 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
     STATIC_REQUIRE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::name == "some-param");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
+    std::vector<std::string_view> vs;
+    P::parse_repeated_value(vs, "abc");
+    REQUIRE(vs == std::vector{"abc"sv});
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, std::vector<std::string_view>>);
 }
 
 TEST_CASE("Positional parameter may specify default value (i.e. optional parameter)")
@@ -85,11 +89,6 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
             return "default-value"sv;
         }
     >;
-
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::parse_value("456") == "456");
-    STATIC_REQUIRE(P::default_value() == "default-value");
 
     STATIC_REQUIRE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
@@ -106,6 +105,12 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::name == "some-param");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::parse_value("456") == "456");
+    STATIC_REQUIRE(P::default_value() == "default-value");
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, std::string_view>);
 }
 
 TEST_CASE("Optional positional parameter may specify allowance for repetition")
@@ -123,13 +128,6 @@ TEST_CASE("Optional positional parameter may specify allowance for repetition")
         }
     >;
 
-    STATIC_REQUIRE(P::name == "some-param");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
-    std::vector<std::string_view> vs;
-    P::parse_repeated_value(vs, "abc");
-    REQUIRE(vs == std::vector{"abc"sv});
-
     STATIC_REQUIRE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
@@ -145,6 +143,14 @@ TEST_CASE("Optional positional parameter may specify allowance for repetition")
     STATIC_REQUIRE_FALSE(details_::Has_true_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_false_value<P>);
     STATIC_REQUIRE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::name == "some-param");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::parse_value("123") == std::vector{"123"sv});
+    std::vector<std::string_view> vs;
+    P::parse_repeated_value(vs, "abc");
+    REQUIRE(vs == std::vector{"abc"sv});
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, std::vector<std::string_view>>);
 }
 
 namespace {

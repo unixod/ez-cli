@@ -1,5 +1,6 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter/concepts.h"
+#include "ez/cli/parameter/traits.h"
 
 using ez::cli::concepts::Positional_parameter;
 using ez::cli::concepts::Regular_parameter;
@@ -25,6 +26,8 @@ TEST_CASE("Boolean parameter may have only short name")
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
+
+    STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
@@ -54,6 +57,8 @@ TEST_CASE("Boolean parameter may have only long name")
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
+
+    STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
@@ -85,6 +90,8 @@ TEST_CASE("Boolean parameter may have both short and long names")
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
     STATIC_REQUIRE(Parameter<P>);
+
+    STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);

@@ -1,6 +1,7 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/concepts.h"
+#include "ez/cli/parameter/traits.h"
 
 using ez::cli::concepts::Positional_parameter;
 using ez::cli::concepts::Regular_parameter;
@@ -21,12 +22,6 @@ TEST_CASE("Boolean parameter may have only short name")
         }
     >;
 
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::true_value() == 123);
-    STATIC_REQUIRE(P::false_value() == 321);
-    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
-
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
     STATIC_REQUIRE(Boolean_parameter<P>);
@@ -42,6 +37,12 @@ TEST_CASE("Boolean parameter may have only short name")
     STATIC_REQUIRE(details_::Has_true_value<P>);
     STATIC_REQUIRE(details_::Has_false_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::short_name == "short-name");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::true_value() == 123);
+    STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 }
 
 TEST_CASE("Boolean parameter may have only long name")
@@ -55,12 +56,6 @@ TEST_CASE("Boolean parameter may have only long name")
             return 321;
         }
     >;
-
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::true_value() == 123);
-    STATIC_REQUIRE(P::false_value() == 321);
-    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
@@ -77,6 +72,12 @@ TEST_CASE("Boolean parameter may have only long name")
     STATIC_REQUIRE(details_::Has_true_value<P>);
     STATIC_REQUIRE(details_::Has_false_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::long_name == "long-name");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::true_value() == 123);
+    STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 }
 
 TEST_CASE("Boolean parameter may have both short and long names")
@@ -90,13 +91,6 @@ TEST_CASE("Boolean parameter may have both short and long names")
             return 321;
         }
     >;
-
-    STATIC_REQUIRE(P::short_name == "short-name");
-    STATIC_REQUIRE(P::long_name == "long-name");
-    STATIC_REQUIRE(P::description == "The parameter descritption.");
-    STATIC_REQUIRE(P::true_value() == 123);
-    STATIC_REQUIRE(P::false_value() == 321);
-    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 
     STATIC_REQUIRE_FALSE(Positional_parameter<P>);
     STATIC_REQUIRE_FALSE(Regular_parameter<P>);
@@ -113,6 +107,13 @@ TEST_CASE("Boolean parameter may have both short and long names")
     STATIC_REQUIRE(details_::Has_true_value<P>);
     STATIC_REQUIRE(details_::Has_false_value<P>);
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
+
+    STATIC_REQUIRE(P::short_name == "short-name");
+    STATIC_REQUIRE(P::long_name == "long-name");
+    STATIC_REQUIRE(P::description == "The parameter descritption.");
+    STATIC_REQUIRE(P::true_value() == 123);
+    STATIC_REQUIRE(P::false_value() == 321);
+    STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 }
 
 namespace {
