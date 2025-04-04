@@ -199,7 +199,7 @@ constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto lex
 
 template<concepts::Parameter... P>
     requires (sizeof...(P) > 0)
-constexpr utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char*> args)
+utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char*> args)
 {
     auto p = args.begin();
     const auto e = args.end();

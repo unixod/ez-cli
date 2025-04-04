@@ -27,3 +27,6 @@ addTest("Custom boolean parameter" custom_boolean_parameter
 
 addTest("Ambiguous custom parameter" ambiguous_custom_parameter
     LIBS ez::cli ez::cli::tests_config)
+
+addTest("ez::Cli" cli
+    LIBS ez::cli ez::cli::tests_config)

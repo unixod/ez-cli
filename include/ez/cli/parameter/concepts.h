@@ -2,7 +2,7 @@
 #define EZ_CLI_PARAMETER_CONCEPTS_H
 
 #include <string_view>
-#include "ez/static_string.h"
+#include <ez/static_string.h>
 
 namespace ez::cli::concepts {
 namespace details_ {
@@ -133,6 +133,11 @@ concept Parameter =
     Regular_parameter<P> ||
     Boolean_parameter<P> ||
     Positional_parameter<P>;
+
+template<typename P>
+concept Repeatable_parameter =
+    Parameter<P> &&
+    (!details_::Has_parse_repeated_value_alike<P> || details_::Has_parse_repeated_value<P>);
 
 } // namespace ez::cli::concepts
 

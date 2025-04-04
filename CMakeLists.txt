@@ -21,12 +21,12 @@ endif()
 cmake_dependent_option(EZ_CLI_INSTALL
     "Generate an install target for ez::cli" Off "NOT EZ_CLI_STANDALONE" On)
 
-# Require C++20 or higher.
+# Require C++23 or higher.
 # Notes:
 # - CMAKE_CXX_STANDARD is for dependencies (for now it's only Catch2).
 # - cxx_std_${EZ_CLI_CPP_MINIMUM_REQUIRED} (in compile-options.cmake) is for ez-support and for
 #   its consumers (i.e. dependent targets).
-set(EZ_CLI_CPP_MINIMUM_REQUIRED 20)
+set(EZ_CLI_CPP_MINIMUM_REQUIRED 23)
 if(CMAKE_CXX_STANDARD VERSION_LESS ${EZ_CLI_CPP_MINIMUM_REQUIRED})
     set(CMAKE_CXX_STANDARD ${EZ_CLI_CPP_MINIMUM_REQUIRED})
 endif()

@@ -1,6 +1,10 @@
 #ifndef EZ_GSL_H
 #define EZ_GSL_H
 
+#include <cassert>
+#include <utility>
+#include <limits>
+
 namespace ez::gsl {
 
 template<typename To, typename From>

@@ -5,18 +5,21 @@
 #include <ranges>
 #include <type_traits>
 #include <variant>
-#include "ez/utils/match.h"
-#include "ez/utils/type-conversion.h"
-#include "ez/support/std23.h"
-#include "mp.h"  // tmporary
-#include "gsl.h" // temporary
+#include <expected>
+
+#include "ez/c_string_view.h"
 #include "ez/cli/details_/lexer.h"
+#include "ez/cli/details_/uninitialized.h"
 #include "ez/cli/parameter.h"
 #include "ez/cli/parameter/traits.h"
-#include "ez/c_string_view.h"
-#include "ez/cli/details_/uninitialized.h"
-#include "ez/utils/generator.h"
 #include "ez/old.h"
+#include "ez/support/std23.h"
+#include "ez/utils/generator.h"
+#include "ez/utils/match.h"
+#include "ez/utils/type-conversion.h"
+
+#include "mp.h"  // tmporary
+#include "gsl.h" // temporary
 
 namespace ez::cli::details_ {
 
@@ -46,89 +49,89 @@ template<typename T>
 concept Single_version_cli = details_::Single_version_cli<T>::value;
 
 
-template<Single_version_cli... S_cli>
-class Cli<S_cli...> {
-    template<typename...>
-    struct Type_list{};
+// template<Single_version_cli... S_cli>
+// class Cli<S_cli...> {
+//     template<typename...>
+//     struct Type_list{};
 
-    struct Multi_cli_error {};
+//     struct Multi_cli_error {};
 
-public:
-    template<typename T>
-        requires std::same_as<std::remove_const_t<T>, char>
-    static auto parse(std::integral auto argc, T** argv)
-    {
-        return parse(argc, argv, [](auto error){
-            throw error;
-        });
-    }
+// public:
+//     template<typename T>
+//         requires std::same_as<std::remove_const_t<T>, char>
+//     static auto parse(std::integral auto argc, T** argv)
+//     {
+//         return parse(argc, argv, [](auto error){
+//             throw error;
+//         });
+//     }
 
-    template<typename T>
-        requires std::same_as<std::remove_const_t<T>, char>
-    static auto parse(std::integral auto argc, T** argv, auto&& error_handler)
-    {
-        using Err_handler_ret_type = decltype(error_handler(std::declval<cli::Error&&>()));
+//     template<typename T>
+//         requires std::same_as<std::remove_const_t<T>, char>
+//     static auto parse(std::integral auto argc, T** argv, auto&& error_handler)
+//     {
+//         using Err_handler_ret_type = decltype(error_handler(std::declval<cli::Error&&>()));
 
-        using Result_type = std::conditional_t<
-            std::same_as<Err_handler_ret_type, void>,
-            std::variant<S_cli...>,
-            std::variant<S_cli..., Err_handler_ret_type>
-        >;
+//         using Result_type = std::conditional_t<
+//             std::same_as<Err_handler_ret_type, void>,
+//             std::variant<S_cli...>,
+//             std::variant<S_cli..., Err_handler_ret_type>
+//         >;
 
-        auto cli_or_error = parse_(Type_list<S_cli...>{}, argc, argv);
+//         auto cli_or_error = parse_(Type_list<S_cli...>{}, argc, argv);
 
-        return utils::match(cli_or_error,
-            [](auto& cli) -> Result_type {
-                return std::move(cli);
-            },
-            [&error_handler](cli::Error& error) -> Result_type {
-                if constexpr (std::same_as<Err_handler_ret_type, void>) {
-                    const auto error_copy = error;
-                    error_handler(error);
+//         return utils::match(cli_or_error,
+//             [](auto& cli) -> Result_type {
+//                 return std::move(cli);
+//             },
+//             [&error_handler](cli::Error& error) -> Result_type {
+//                 if constexpr (std::same_as<Err_handler_ret_type, void>) {
+//                     const auto error_copy = error;
+//                     error_handler(error);
 
-                    // User provided error_handler is supposed to throw exception as its return
-                    // value type is void, however since we can't always check at compile-time
-                    // if error_handler fulfills this requirement we need to somehow handle a
-                    // situation wherein error_handler doens't throw an exception. The current
-                    // strategy is to throw exception on our own.
-                    throw error_copy;
-                }
-                else {
-                    return error_handler(std::move(error));
-                }
-            }
-        );
-    }
+//                     // User provided error_handler is supposed to throw exception as its return
+//                     // value type is void, however since we can't always check at compile-time
+//                     // if error_handler fulfills this requirement we need to somehow handle a
+//                     // situation wherein error_handler doens't throw an exception. The current
+//                     // strategy is to throw exception on our own.
+//                     throw error_copy;
+//                 }
+//                 else {
+//                     return error_handler(std::move(error));
+//                 }
+//             }
+//         );
+//     }
 
-private:
-    template<typename T, typename C, typename... Rest_clis>
-        requires std::same_as<std::remove_const_t<T>, char>
-    static auto parse_(Type_list<C, Rest_clis...>,
-                       std::integral auto argc, T** argv,
-                       Multi_cli_error multi_error = {})
-    {
-        using Result_type = std::variant<S_cli..., cli::Error>;
+// private:
+//     template<typename T, typename C, typename... Rest_clis>
+//         requires std::same_as<std::remove_const_t<T>, char>
+//     static auto parse_(Type_list<C, Rest_clis...>,
+//                        std::integral auto argc, T** argv,
+//                        Multi_cli_error multi_error = {})
+//     {
+//         using Result_type = std::variant<S_cli..., cli::Error>;
 
-        auto cli_or_error = C::parse(argc, argv, [](auto error){ return error; });
+//         auto cli_or_error = C::parse(argc, argv, [](auto error){ return error; });
 
-        return utils::match(cli_or_error,
-            [](C& cli) -> Result_type {
-                // Command line is successfully parsed, return an instance of Cli.
-                return std::move(cli);
-            },
-            [argc, argv, &multi_error](auto& error) -> Result_type {
-                // Try to parse cli according to the rest of cli specs.
-                multi_error += std::move(error);
-                return parse_(Type_list<Rest_clis...>{}, argc, argv, std::move(multi_error));
-            }
-        );
-    }
+//         return utils::match(cli_or_error,
+//             [](C& cli) -> Result_type {
+//                 // Command line is successfully parsed, return an instance of Cli.
+//                 return std::move(cli);
+//             },
+//             [argc, argv, &multi_error](auto& error) -> Result_type {
+//                 // Try to parse cli according to the rest of cli specs.
+//                 multi_error += std::move(error);
+//                 return parse_(Type_list<Rest_clis...>{}, argc, argv, std::move(multi_error));
+//             }
+//         );
+//     }
 
-    static auto parse_(Type_list<>, auto /*argc*/, auto /*argv*/, Multi_cli_error multi_error = {})
-    {
-        return std::variant<S_cli..., cli::Error>{multi_error};
-    }
-};
+//     static auto parse_(Type_list<>, auto /*argc*/, auto /*argv*/, Multi_cli_error multi_error = {})
+//     {
+//         return std::variant<S_cli..., cli::Error>{multi_error};
+//     }
+// };
 
 // TODO:
 // - implement parameter_info  to provide enought info for exception throwing
@@ -168,18 +171,17 @@ public:
         return get_<Param_tagged_value<T>>(*this).value;
     }
 
-    template<typename T>
-        requires std::same_as<std::remove_const_t<T>, char>
-    static constexpr auto parse(std::integral auto argc, T** argv)
+    template<typename Char>
+        requires std::same_as<std::remove_const_t<Char>, char>
+    static constexpr auto parse(std::integral auto argc, Char** argv)
     {
-        return parse(argc, argv, [](auto error){
-            throw error;
-        });
+        return parse(argc, argv, [](auto error) { throw error; });
     }
 
-    template<typename T, typename H>
-        requires std::same_as<std::remove_const_t<T>, char>
-    static constexpr auto parse(std::integral auto argc, T** argv, H&& error_handler)
+    template<typename Char, std::invocable<cli::Error> Error_handler>
+        requires std::same_as<std::remove_const_t<Char>, char>
+    static constexpr auto parse(std::integral auto argc, Char** argv,
+                                Error_handler&& /*custom_error_handler*/)
     {
 //        using Err_handler_ret_type = decltype(error_handler(std::declval<cli::Error&&>()));
 
@@ -189,40 +191,47 @@ public:
 //            std::variant<Cli, Err_handler_ret_type>
 //        >;
 
-        auto args =
+        // auto error_handler = [&custom_error_handler](auto error){
+        //     custom_error_handler(error);
+        //     throw error;
+        // };
+
+        auto args_view =
             std::views::counted(argv, gsl::narrow_cast<std::ptrdiff_t>(argc))
             | std::views::drop(1)
             | std::views::transform([](auto arg){ return utils::C_string_view{arg}; });
 
-        auto cli_or_error = parse_(argc, argv);
-
-        return parse_(args, std::forward<H>(error_handler));
+        return parse_(args_view/*, error_handler*/);
     }
 
 private:
-    static constexpr std::variant<Cli, cli::Error> parse_(std::ranges::view auto args)
+    static constexpr std::expected<Cli, cli::Error> parse_(std::ranges::view auto /*args*/)
     {
-        std::tuple<std::optional<cli::traits::Param_value_t<P>>...> arg_values;
+        // std::tuple<std::optional<cli::traits::Param_value_t<P>>...> arg_values;
 
-        for (auto tok: tokenize<P...>(args)) {
-            auto err = utils::match(tok,
-                [&arg_values]<typename Param_type>(cli::details_::Token<Param_type> t) {
-                    auto& v = std::get<std::optional<Param_type>>(arg_values);
-                    if (v.has_value()) {
-//                        if constexpr (!cli::Repeatable_parameter<Param_type>) {
+        // for (auto tok: tokenize<P...>(args)) {
+        //     auto err = utils::match(tok,
+        //         [&arg_values]<typename Param_type>(cli::details_::Token<Param_type> /*t*/) {
+        //             // auto& v = std::get<std::optional<Param_type>>(arg_values);
+        //             // if (v.has_value()) {
+        //             //    if constexpr (!cli::concepts::Repeatable_parameter<Param_type>) {
 
-//                        }
-                    }
-                },
-                [](cli::Error error) {
-                    return std::make_optional(error);
-                }
-            );
+        //             //    }
+        //             //    else {
+        //             //        return
+        //             //    }
+        //             // }
+        //             return std::optional<cli::Error>{};
+        //         },
+        //         [](cli::Error error) {
+        //             return std::make_optional(error);
+        //         }
+        //     );
 
-            if (err) {
-                return err;
-            }
-        }
+        //     if (err) {
+        //         return std::unexpect(err);
+        //     }
+        // }
         return Cli{};
 //            if (tok_id < named_arg_detached_dtrs.size()) {
 //                auto argv_tail = std::ranges::subrange(std::next(p), e);
