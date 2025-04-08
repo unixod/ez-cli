@@ -44,10 +44,23 @@ include(custom-build-profiles.cmake)
 add_library(ez_cli INTERFACE)
 add_library(ez::cli ALIAS ez_cli)
 
-target_include_directories(ez_cli
+target_sources(ez_cli
     INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    FILE_SET HEADERS
+    BASE_DIRS include
+    FILES
+        include/ez/cli/details_/lexer.h
+        include/ez/cli/details_/uninitialized.h
+        include/ez/cli/parameter/concepts.h
+        include/ez/cli/parameter/traits.h
+        include/ez/cli/parameter.h
+        include/ez/c_string_view.h
+        include/ez/cli.h
+        include/ez/gsl.h
+        include/ez/mp.h
+        include/ez/old.h
+        include/ez/static_string.h
+)
 
 target_link_libraries(ez_cli
     INTERFACE
@@ -55,10 +68,10 @@ target_link_libraries(ez_cli
     ez::utils)
 
 if(EZ_CLI_INSTALL)
-    install(DIRECTORY include/ez TYPE INCLUDE)
-
     # Note: an export 'ez-libs' is defined at ez-support.
-    install(TARGETS ez_cli EXPORT ez-libs)
+    install(TARGETS ez_cli EXPORT ez-libs
+        FILE_SET HEADERS
+    )
 
     set_target_properties(ez_cli
         PROPERTIES

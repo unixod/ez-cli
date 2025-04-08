@@ -154,6 +154,36 @@ TEST_CASE("Command line doesn't specify some of mandatory parameters")
     // incorrect {regular, positional}
 }
 
+#include <expected>
+
+using Lexeme = std::string_view;
+
+struct Token {
+    enum struct Class {};
+
+    Lexeme lexeme;
+    Class token_class;
+};
+
+std::optional<Token::Class> find_token(std::span<Token> tokens, Lexeme lexeme)
+{
+    auto i = std::ranges::find(tokens, lexeme, &Token::lexeme);
+    if (i != tokens.end()) {
+        return i->token_class;
+    }
+    return std::nullopt;
+}
+
+// template<ez::cli::concepts::Parameter... P>
+// auto dfa()
+// {
+//            P::
+// }
+
+TEST_CASE("Dfa")
+{
+
+}
 
 
 

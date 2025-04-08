@@ -155,9 +155,21 @@ TEST_CASE("Optional positional parameter may specify allowance for repetition")
 
 namespace {
 
+namespace details_ = ez::cli::details_;
+
+template<ez::utils::Static_string param_name, ez::utils::Static_string param_description, auto... f>
+struct Param :
+    details_::Default_value<f...>,
+    details_::Value_parser<f...>,
+    details_::Repeated_value_parser<details_::Value_parser<f...>, f...> {
+
+    static constexpr auto name = param_name.up_to_null();
+    static constexpr auto description = param_description.up_to_null();
+};
+
 using Incorrect_parameter_types = std::tuple<
     // A parameter name is missing (empty string).
-    ez::cli::Positional_parameter<"",
+    Param<"",
         "A descritption of the param.",
         [](auto arg) {
             return arg;
@@ -165,7 +177,7 @@ using Incorrect_parameter_types = std::tuple<
     >,
 
     // A parameter description is missing (empty string).
-    ez::cli::Positional_parameter<"some-param",
+    Param<"some-param",
         "",
         [](auto arg) {
             return arg;
@@ -173,7 +185,7 @@ using Incorrect_parameter_types = std::tuple<
     >,
 
     // An argument value parsing funciton is missing.
-    ez::cli::Positional_parameter<"some-param",
+    Param<"some-param",
         "A descritption of the param."
     >,
 
@@ -182,7 +194,7 @@ using Incorrect_parameter_types = std::tuple<
     //==-----------------------------------------------==//
 
     // A parameter name is missing (empty string).
-    ez::cli::Positional_parameter<"",
+    Param<"",
         "A descritption of the param.",
         [](auto arg) {
             return arg;
@@ -193,7 +205,7 @@ using Incorrect_parameter_types = std::tuple<
     >,
 
     // A parameter description is missing (empty string).
-    ez::cli::Positional_parameter<"some-param",
+    Param<"some-param",
         "",
         [](auto arg) {
             return arg;
@@ -204,7 +216,7 @@ using Incorrect_parameter_types = std::tuple<
     >,
 
     // An argument value parsing funciton is missing.
-    ez::cli::Positional_parameter<"some-param",
+    Param<"some-param",
         "A descritption of the param.",
         [] {
             return "default value"sv;

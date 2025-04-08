@@ -149,6 +149,20 @@ struct False_value<f, rest...> : False_value<rest...> {};
 } // details_
 
 
+/// Parameter short name should be either empty or match the regex: -[^-]
+template<utils::Static_string s>
+concept Short_name = []{
+    auto str = std::string_view{s.value};
+    return str.empty() || (str.size() == 2 && str[0] == '-' && str[1] != '-');
+}();
+
+/// Parameter long name should be either empty or match the regex: --[^-].+
+template<utils::Static_string s>
+concept Long_name = []{
+    auto str = std::string_view{s.value};
+    return str.empty() || (str.size() > 3 && str.starts_with("--") && str[2] != '-');
+}();
+
 template<auto f, auto... all>
 concept Non_boolean_paremeter_behavior =
     Default_value_func<decltype(f)> ||
@@ -159,45 +173,52 @@ template<typename F>
 concept Boolean_paremeter_behavior = True_value_func<F> || False_value_func<F>;
 
 /// Positional parameters helper constructor.
-template<ez::utils::Static_string param_name,
-         ez::utils::Static_string param_description,
+template<utils::Static_string param_name,
+         utils::Static_string param_description,
          auto... f>
-    requires (Non_boolean_paremeter_behavior<f, f...> && ...)
+    requires (!param_name.up_to_null().empty()) &&
+                (Non_boolean_paremeter_behavior<f, f...> && ...)
 struct Positional_parameter :
     details_::Default_value<f...>,
     details_::Value_parser<f...>,
     details_::Repeated_value_parser<details_::Value_parser<f...>, f...> {
 
-    static constexpr auto name = std::string_view{param_name.value};
-    static constexpr auto description = std::string_view{param_description.value};
+    static constexpr auto name = param_name.up_to_null();
+    static constexpr auto description = param_description.up_to_null();
 };
 
 /// Regular (i.e. not positional nor boolean) parameters helper constructor.
 template<utils::Static_string param_short_name, utils::Static_string param_long_name,
          utils::Static_string param_description,
          auto... f>
-    requires (Non_boolean_paremeter_behavior<f, f...> && ...)
+    requires Short_name<param_short_name> &&
+             Long_name<param_long_name> &&
+             (!param_short_name.up_to_null().empty() || !param_long_name.up_to_null().empty()) &&
+             (Non_boolean_paremeter_behavior<f, f...> && ...)
 struct Regular_parameter :
     details_::Default_value<f...>,
     details_::Value_parser<f...>,
     details_::Repeated_value_parser<details_::Value_parser<f...>, f...> {
 
-    static constexpr auto short_name = std::string_view{param_short_name.value};
-    static constexpr auto long_name = std::string_view{param_long_name.value};
-    static constexpr auto description = std::string_view{param_description.value};
+    static constexpr auto short_name = param_short_name.up_to_null();
+    static constexpr auto long_name = param_long_name.up_to_null();
+    static constexpr auto description = param_description.up_to_null();
 };
 
 /// Boolean parameters helper constructor.
 template<utils::Static_string param_short_name, utils::Static_string param_long_name,
          utils::Static_string param_description,
          Boolean_paremeter_behavior auto... f>
+    requires Short_name<param_short_name> &&
+             Long_name<param_long_name> &&
+             (!param_short_name.up_to_null().empty() || !param_long_name.up_to_null().empty())
 struct Boolean_parameter :
     details_::True_value<f...>,
     details_::False_value<f...> {
 
-    static constexpr auto short_name = std::string_view{param_short_name.value};
-    static constexpr auto long_name = std::string_view{param_long_name.value};
-    static constexpr auto description = std::string_view{param_description.value};
+    static constexpr auto short_name = param_short_name.up_to_null();
+    static constexpr auto long_name = param_long_name.up_to_null();
+    static constexpr auto description = param_description.up_to_null();
 };
 
 } // namespace ez::cli
