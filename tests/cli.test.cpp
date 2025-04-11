@@ -95,7 +95,7 @@ TEST_CASE("Argc_arv")
 
 TEST_CASE("Parameter set is empty")
 {
-    using P = ez::cli::Regular_parameter<"-s", "--some",
+    using P = ez::cli::Regular_param<"-s", "--some",
         "Test param",
         [](std::string_view){ return 3; }
     >;

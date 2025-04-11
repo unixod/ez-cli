@@ -109,7 +109,7 @@ struct True_value<f, rest...> {
     static_assert(
         !(requires { rest(std::true_type{}); } || ...),
 
-        "ez::cli::Boolean_parameter should be parametrized exactly by single true-value function"
+        "ez::cli::Boolean_param should be parametrized exactly by single true-value function"
         " with the signature: std::true_type -> parameter-value-type."
     );
 
@@ -133,7 +133,7 @@ struct False_value<f, rest...> {
     static_assert(
         !(requires { rest(std::false_type{}); } || ...),
 
-        "ez::cli::Boolean_parameter should be parametrized exactly by single false-value function"
+        "ez::cli::Boolean_param should be parametrized exactly by single false-value function"
         " with the signature: std::false_type -> parameter-value-type."
     );
 
@@ -172,13 +172,19 @@ concept Non_boolean_paremeter_behavior =
 template<typename F>
 concept Boolean_paremeter_behavior = True_value_func<F> || False_value_func<F>;
 
+template<utils::Static_string subcmd_name>
+    requires (!subcmd_name.up_to_null().empty())
+struct Subcommand {
+    static constexpr auto name = subcmd_name.up_to_null();
+};
+
 /// Positional parameters helper constructor.
 template<utils::Static_string param_name,
          utils::Static_string param_description,
          auto... f>
     requires (!param_name.up_to_null().empty()) &&
-                (Non_boolean_paremeter_behavior<f, f...> && ...)
-struct Positional_parameter :
+             (Non_boolean_paremeter_behavior<f, f...> && ...)
+struct Positional_param :
     details_::Default_value<f...>,
     details_::Value_parser<f...>,
     details_::Repeated_value_parser<details_::Value_parser<f...>, f...> {
@@ -195,7 +201,7 @@ template<utils::Static_string param_short_name, utils::Static_string param_long_
              Long_name<param_long_name> &&
              (!param_short_name.up_to_null().empty() || !param_long_name.up_to_null().empty()) &&
              (Non_boolean_paremeter_behavior<f, f...> && ...)
-struct Regular_parameter :
+struct Regular_param :
     details_::Default_value<f...>,
     details_::Value_parser<f...>,
     details_::Repeated_value_parser<details_::Value_parser<f...>, f...> {
@@ -212,7 +218,7 @@ template<utils::Static_string param_short_name, utils::Static_string param_long_
     requires Short_name<param_short_name> &&
              Long_name<param_long_name> &&
              (!param_short_name.up_to_null().empty() || !param_long_name.up_to_null().empty())
-struct Boolean_parameter :
+struct Boolean_param :
     details_::True_value<f...>,
     details_::False_value<f...> {
 

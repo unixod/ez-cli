@@ -109,34 +109,34 @@ concept Bool_param =
 
 // <app> value
 template<typename P>
-concept Positional_parameter =
+concept Positional_param =
     details_::Positional_param<P> &&
     !details_::Regular_param<P> &&
     !details_::Bool_param<P>;
 
 // <app> -a=value -a value --arg=value --arg value
 template<typename P>
-concept Regular_parameter =
+concept Regular_param =
     !details_::Positional_param<P> &&
     details_::Regular_param<P> &&
     !details_::Bool_param<P>;
 
 // <app> -a --arg
 template<typename P>
-concept Boolean_parameter =
+concept Boolean_param =
     !details_::Positional_param<P> &&
     !details_::Regular_param<P> &&
     details_::Bool_param<P>;
 
 template<typename P>
-concept Parameter =
-    Regular_parameter<P> ||
-    Boolean_parameter<P> ||
-    Positional_parameter<P>;
+concept Param =
+    Regular_param<P> ||
+    Boolean_param<P> ||
+    Positional_param<P>;
 
 template<typename P>
-concept Repeatable_parameter =
-    Parameter<P> &&
+concept Repeatable_param =
+    Param<P> &&
     (!details_::Has_parse_repeated_value_alike<P> || details_::Has_parse_repeated_value<P>);
 
 } // namespace ez::cli::concepts

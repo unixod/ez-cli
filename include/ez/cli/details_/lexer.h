@@ -3,53 +3,52 @@
 
 #include <variant>
 #include <span>
-#include "ez/cli/parameter.h"
-#include "ez/c_string_view.h"
-#include "ez/mp.h"
-#include "ez/static_string.h"
-#include "ez/utils/generator.h"
+#include <ez/cli/parameter.h>
+#include <ez/c_string_view.h>
+#include <ez/mp.h>
+#include <ez/static_string.h>
+#include <ez/utils/generator.h>
 
 // TODO: Move to separate class
 namespace ez::cli {
 struct Error {
-    struct Unknown_parameter {
-    };
+    struct Unknown_param {};
 
-    template<concepts::Parameter, utils::Static_string>
-    struct Parameter_misuse {};
+    template<concepts::Param, utils::Static_string>
+    struct Param_misuse {};
 
-    Error(Unknown_parameter) {};
+    Error(Unknown_param) {};
 
-    template<concepts::Parameter P, utils::Static_string msg>
-    Error(Parameter_misuse<P, msg>) {}
+    template<concepts::Param P, utils::Static_string msg>
+    Error(Param_misuse<P, msg>) {}
 };
 } // namespace ez::cli
 
 namespace ez::cli::details_ {
 
 template<typename P>
-concept Nonpositional_parameter =
-    concepts::Regular_parameter<P> ||
-    concepts::Boolean_parameter<P>;
+concept Nonpositional_param =
+    concepts::Regular_param<P> ||
+    concepts::Boolean_param<P>;
 
 template<typename...>
 struct Type_list {};
 
-template<concepts::Parameter P>
-using Is_named_param = std::bool_constant<Nonpositional_parameter<P>>;
+template<concepts::Param P>
+using Is_named_param = std::bool_constant<Nonpositional_param<P>>;
 
-template<concepts::Parameter P>
-using Is_positional_param = std::bool_constant<concepts::Positional_parameter<P>>;
+template<concepts::Param P>
+using Is_positional_param = std::bool_constant<concepts::Positional_param<P>>;
 
-template<concepts::Parameter>
+template<concepts::Param>
 class Token {
     utils::C_string_view value_lexeme;
 };
 
-template<concepts::Boolean_parameter P>
+template<concepts::Boolean_param P>
 class Token<P> {};
 
-template<typename It, concepts::Parameter... P, Nonpositional_parameter... Named_p>
+template<typename It, concepts::Param... P, Nonpositional_param... Named_p>
 consteval auto get_named_funcs_impl(Type_list<Named_p...>)
 {
     using Token_variant = std::variant<Token<P>..., Error>;
@@ -70,7 +69,7 @@ consteval auto get_named_funcs_impl(Type_list<Named_p...>)
             if constexpr (!concepts::details_::Has_value_parser<Named_p>) {
                 if (*p_end == '=') {
                     return R{
-                        Error::Parameter_misuse<Named_p, "Parameter doesn't accept values">{},
+                        Error::Param_misuse<Named_p, "Parameter doesn't accept values">{},
                         args_begin
                     };
                 }
@@ -85,7 +84,7 @@ consteval auto get_named_funcs_impl(Type_list<Named_p...>)
             }
             else {
                 return R{
-                    Error::Parameter_misuse<Named_p, "Parameter requires value">{},
+                    Error::Param_misuse<Named_p, "Parameter requires value">{},
                     args_begin
                 };
             }
@@ -93,7 +92,7 @@ consteval auto get_named_funcs_impl(Type_list<Named_p...>)
     };
 }
 
-template<typename It, concepts::Parameter... P>
+template<typename It, concepts::Param... P>
 consteval auto get_named_funcs_()
 {
     using Named_param_types =
@@ -102,7 +101,7 @@ consteval auto get_named_funcs_()
     return get_named_funcs_impl<It, P...>(Named_param_types{});
 }
 
-template<concepts::Parameter... P, concepts::Positional_parameter... Positional_p>
+template<concepts::Param... P, concepts::Positional_param... Positional_p>
 consteval auto get_positional_funcs_impl(Type_list<Positional_p...>)
 {
     using Token_variant = std::variant<Token<P>..., Error>;
@@ -116,7 +115,7 @@ consteval auto get_positional_funcs_impl(Type_list<Positional_p...>)
     };
 }
 
-template<concepts::Parameter... P>
+template<concepts::Param... P>
 consteval auto get_positional_funcs_()
 {
     using Positional_params_types =
@@ -125,7 +124,7 @@ consteval auto get_positional_funcs_()
     return get_positional_funcs_impl<P...>(Positional_params_types{});
 }
 
-template<Nonpositional_parameter... P>
+template<Nonpositional_param... P>
 consteval auto get_named_param_tokens_()
 {
     struct Param_token {
@@ -155,7 +154,7 @@ consteval auto get_named_param_tokens_()
     return tokens;
 }
 
-template<Nonpositional_parameter... P>
+template<Nonpositional_param... P>
     requires (sizeof...(P) > 0)
 constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto p, Type_list<P...>) noexcept
 {
@@ -187,7 +186,7 @@ constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto p, 
     return std::pair{std::nullopt, p};
 }
 
-template<concepts::Parameter... P>
+template<concepts::Param... P>
     requires (sizeof...(P) > 0)
 constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto lexeme) noexcept
 {
@@ -197,7 +196,7 @@ constexpr std::pair<std::optional<std::size_t>, const char*> recognize_(auto lex
     return recognize_<P...>(lexeme, Named_params_types{});
 }
 
-template<concepts::Parameter... P>
+template<concepts::Param... P>
     requires (sizeof...(P) > 0)
 utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char*> args)
 {
@@ -222,7 +221,7 @@ utils::Generator<std::variant<Token<P>..., Error>> tokenize(std::span<const char
             ++p;
         }
         else {
-            co_yield Error::Unknown_parameter{};
+            co_yield Error::Unknown_param{};
             co_return; // FIXME co_return Error::Unknown_parameter{};
         }
     }

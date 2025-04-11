@@ -2,10 +2,10 @@
 #include "ez/cli/parameter/concepts.h"
 #include "ez/cli/parameter/traits.h"
 
-using ez::cli::concepts::Positional_parameter;
-using ez::cli::concepts::Regular_parameter;
-using ez::cli::concepts::Boolean_parameter;
-using ez::cli::concepts::Parameter;
+using ez::cli::concepts::Positional_param;
+using ez::cli::concepts::Regular_param;
+using ez::cli::concepts::Boolean_param;
+using ez::cli::concepts::Param;
 using ez::cli::traits::Param_value_t;
 using namespace std::string_view_literals;
 
@@ -18,14 +18,14 @@ struct Boolean_param_1 {
     static constexpr auto false_value() { return 321; }
 };
 
-TEST_CASE("Boolean parameter may have only short name")
+TEST_CASE("Boolean param may have only short name")
 {
     using P = Boolean_param_1;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
@@ -49,14 +49,14 @@ struct Boolean_param_2 {
     static constexpr auto false_value() { return 321; }
 };
 
-TEST_CASE("Boolean parameter may have only long name")
+TEST_CASE("Boolean param may have only long name")
 {
     using P = Boolean_param_2;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
@@ -82,14 +82,14 @@ struct Boolean_param_3 {
     static constexpr auto false_value() { return 321; }
 };
 
-TEST_CASE("Boolean parameter may have both short and long names")
+TEST_CASE("Boolean param may have both short and long names")
 {
     using P = Boolean_param_3;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, int>);
 
@@ -145,7 +145,7 @@ template<typename... Properties>
 struct Compose_test_param : Properties... {};
 
 
-using Incorrect_parameter_types = std::tuple<
+using Incorrect_param_types = std::tuple<
     // A parameter name is not specified.
     Compose_test_param<
         /* Mock_short_name<"">, */
@@ -230,17 +230,17 @@ using Incorrect_parameter_types = std::tuple<
 
 } // namespace
 
-TEMPLATE_LIST_TEST_CASE("I", "", Incorrect_parameter_types)
+TEMPLATE_LIST_TEST_CASE("I", "", Incorrect_param_types)
 {
     using P = TestType;
 
-    static_assert(!std::is_same_v<P, Incorrect_parameter_types>,
+    static_assert(!std::is_same_v<P, Incorrect_param_types>,
         "Ensure using TEMPLATE_LIST_TEST_CASE and not TEMPLATE_TEST_CASE.");
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 }
 
 

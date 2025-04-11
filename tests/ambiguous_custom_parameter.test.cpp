@@ -1,13 +1,13 @@
 #include <catch2/catch_all.hpp>
 #include "ez/cli/parameter/concepts.h"
 
-using ez::cli::concepts::Positional_parameter;
-using ez::cli::concepts::Regular_parameter;
-using ez::cli::concepts::Boolean_parameter;
-using ez::cli::concepts::Parameter;
+using ez::cli::concepts::Positional_param;
+using ez::cli::concepts::Regular_param;
+using ez::cli::concepts::Boolean_param;
+using ez::cli::concepts::Param;
 
 
-struct Ambigous_parameter_1 {
+struct Ambigous_param_1 {
     static constexpr auto name = "...";
     static constexpr auto short_name = "...";
     static constexpr auto description = "...";
@@ -18,14 +18,14 @@ struct Ambigous_parameter_1 {
     }
 };
 
-TEST_CASE("Ambigous_parameter_1 has sufficient minimum for both positional and regular parameters")
+TEST_CASE("Ambigous_param_1 has sufficient minimum for both positional and regular params")
 {
-    using P = Ambigous_parameter_1;
+    using P = Ambigous_param_1;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
@@ -40,7 +40,7 @@ TEST_CASE("Ambigous_parameter_1 has sufficient minimum for both positional and r
 }
 
 
-struct Ambigous_parameter_2 {
+struct Ambigous_param_2 {
     static constexpr auto name = "...";
     static constexpr auto long_name = "...";
     static constexpr auto description = "...";
@@ -51,14 +51,14 @@ struct Ambigous_parameter_2 {
     }
 };
 
-TEST_CASE("Ambigous_parameter_2 has sufficient minimum for both positional and regular parameters")
+TEST_CASE("Ambigous_param_2 has sufficient minimum for both positional and regular params")
 {
-    using P = Ambigous_parameter_2;
+    using P = Ambigous_param_2;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
@@ -72,7 +72,7 @@ TEST_CASE("Ambigous_parameter_2 has sufficient minimum for both positional and r
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Ambigous_parameter_3 {
+struct Ambigous_param_3 {
     static constexpr auto short_name = "...";
     static constexpr auto description = "...";
 
@@ -92,14 +92,14 @@ struct Ambigous_parameter_3 {
     }
 };
 
-TEST_CASE("Ambigous_parameter_3 has sufficient minimum for both regular and bool parameters")
+TEST_CASE("Ambigous_param_3 has sufficient minimum for both regular and bool params")
 {
-    using P = Ambigous_parameter_3;
+    using P = Ambigous_param_3;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
@@ -113,7 +113,7 @@ TEST_CASE("Ambigous_parameter_3 has sufficient minimum for both regular and bool
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Ambigous_parameter_4 {
+struct Ambigous_param_4 {
     static constexpr auto long_name = "...";
     static constexpr auto description = "...";
 
@@ -133,14 +133,14 @@ struct Ambigous_parameter_4 {
     }
 };
 
-TEST_CASE("Ambigous_parameter_4 has sufficient minimum for both regular and bool parameters")
+TEST_CASE("Ambigous_param_4 has sufficient minimum for both regular and bool params")
 {
-    using P = Ambigous_parameter_4;
+    using P = Ambigous_param_4;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);

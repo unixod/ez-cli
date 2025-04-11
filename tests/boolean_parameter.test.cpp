@@ -1,18 +1,18 @@
 #include <catch2/catch_all.hpp>
-#include "ez/cli/parameter.h"
-#include "ez/cli/parameter/concepts.h"
-#include "ez/cli/parameter/traits.h"
+#include <ez/cli/parameter.h>
+#include <ez/cli/parameter/concepts.h>
+#include <ez/cli/parameter/traits.h>
 
-using ez::cli::concepts::Positional_parameter;
-using ez::cli::concepts::Regular_parameter;
-using ez::cli::concepts::Boolean_parameter;
-using ez::cli::concepts::Parameter;
+using ez::cli::concepts::Positional_param;
+using ez::cli::concepts::Regular_param;
+using ez::cli::concepts::Boolean_param;
+using ez::cli::concepts::Param;
 using ez::cli::traits::Param_value_t;
 using namespace std::string_view_literals;
 
-TEST_CASE("Boolean parameter may have only short name")
+TEST_CASE("Boolean param may have only short name")
 {
-    using P = ez::cli::Boolean_parameter<"-s", "",
+    using P = ez::cli::Boolean_param<"-s", "",
         "The parameter descritption.",
         [](std::true_type) {
             return 123;
@@ -22,10 +22,10 @@ TEST_CASE("Boolean parameter may have only short name")
         }
     >;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
@@ -45,9 +45,9 @@ TEST_CASE("Boolean parameter may have only short name")
     STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 }
 
-TEST_CASE("Boolean parameter may have only long name")
+TEST_CASE("Boolean param may have only long name")
 {
-    using P = ez::cli::Boolean_parameter<"", "--long-name",
+    using P = ez::cli::Boolean_param<"", "--long-name",
         "The parameter descritption.",
         [](std::true_type) {
             return 123;
@@ -57,10 +57,10 @@ TEST_CASE("Boolean parameter may have only long name")
         }
     >;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE_FALSE(details_::Has_short_name<P>);
@@ -80,9 +80,9 @@ TEST_CASE("Boolean parameter may have only long name")
     STATIC_REQUIRE(std::same_as<Param_value_t<P>, int>);
 }
 
-TEST_CASE("Boolean parameter may have both short and long names")
+TEST_CASE("Boolean param may have both short and long names")
 {
-    using P = ez::cli::Boolean_parameter<"-s", "--long-name",
+    using P = ez::cli::Boolean_param<"-s", "--long-name",
         "The parameter descritption.",
         [](std::true_type) {
             return 123;
@@ -92,10 +92,10 @@ TEST_CASE("Boolean parameter may have both short and long names")
         }
     >;
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     namespace details_ = ez::cli::concepts::details_;
     STATIC_REQUIRE(details_::Has_short_name<P>);
@@ -123,7 +123,7 @@ namespace details_ = ez::cli::details_;
 template<ez::utils::Static_string param_short_name, ez::utils::Static_string param_long_name,
          ez::utils::Static_string param_description,
          auto... f>
-struct Param :
+struct Test_param :
     details_::True_value<f...>,
     details_::False_value<f...> {
 
@@ -132,49 +132,49 @@ struct Param :
     static constexpr auto description = param_description.up_to_null();
 };
 
-using Incorrect_parameter_types = std::tuple<
-     // Both short and long parameter names are missing (empty strings).
-    Param<"", "",
+using Incorrect_param_types = std::tuple<
+     // Both short and long param names are missing (empty strings).
+    Test_param<"", "",
         "The parameter descritption.",
         [](std::true_type) { return 123; },
         [](std::false_type) { return 321; }
     >,
 
-    // A parameter description is missing (empty string).
-    Param<"-s", "",
+    // A param description is missing (empty string).
+    Test_param<"-s", "",
         "",
         [](std::true_type) { return 123; },
         [](std::false_type) { return 321; }
     >,
 
-    // A parameter description is missing (empty string).
-    Param<"", "--long-name",
+    // A param description is missing (empty string).
+    Test_param<"", "--long-name",
         "",
         [](std::true_type) { return 123; },
         [](std::false_type) { return 321; }
     >,
 
-    // A parameter description is missing (empty string).
-    Param<"-s", "--long-name",
+    // A param description is missing (empty string).
+    Test_param<"-s", "--long-name",
         "",
         [](std::true_type) { return 123; },
         [](std::false_type) { return 321; }
     >,
 
     // An true-value and false-value functions are missing.
-    Param<"-s", "",
+    Test_param<"-s", "",
         "The parameter descritption."
     >,
 
     // A true-value function is missing.
-    Param<"-s", "--long-name",
+    Test_param<"-s", "--long-name",
         "The parameter descritption.",
         /*[](std::true_type) { return 123; },*/
         [](std::false_type) { return 321; }
     >,
 
     // A false-value function is missing.
-    Param<"-s", "--long-name",
+    Test_param<"-s", "--long-name",
         "The parameter descritption.",
         [](std::true_type) { return 123; }/*,
         [](std::false_type) { return 321; }*/
@@ -183,15 +183,15 @@ using Incorrect_parameter_types = std::tuple<
 
 } // namespace
 
-TEMPLATE_LIST_TEST_CASE("I", "", Incorrect_parameter_types)
+TEMPLATE_LIST_TEST_CASE("Incorrect boolean param spec", "", Incorrect_param_types)
 {
     using P = TestType;
 
-    static_assert(!std::is_same_v<P, Incorrect_parameter_types>,
+    static_assert(!std::is_same_v<P, Incorrect_param_types>,
         "Ensure using TEMPLATE_LIST_TEST_CASE and not TEMPLATE_TEST_CASE.");
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 }

@@ -7,16 +7,16 @@
 #include <variant>
 #include <expected>
 
-#include "ez/c_string_view.h"
-#include "ez/cli/details_/lexer.h"
-#include "ez/cli/details_/uninitialized.h"
-#include "ez/cli/parameter.h"
-#include "ez/cli/parameter/traits.h"
-#include "ez/old.h"
-#include "ez/support/std23.h"
-#include "ez/utils/generator.h"
-#include "ez/utils/match.h"
-#include "ez/utils/type-conversion.h"
+#include <ez/c_string_view.h>
+#include <ez/cli/details_/lexer.h>
+#include <ez/cli/details_/uninitialized.h>
+#include <ez/cli/parameter.h>
+#include <ez/cli/parameter/traits.h>
+#include <ez/old.h>
+#include <ez/support/std23.h>
+#include <ez/utils/generator.h>
+#include <ez/utils/match.h>
+#include <ez/utils/type-conversion.h>
 
 #include "mp.h"  // tmporary
 #include "gsl.h" // temporary
@@ -41,7 +41,7 @@ namespace details_ {
 template<typename>
 struct Single_version_cli : std::false_type {};
 
-template<cli::concepts::Parameter... P>
+template<cli::concepts::Param... P>
 struct Single_version_cli<Cli<P...>> : std::true_type {};
 } // namespace details_
 
@@ -139,7 +139,7 @@ concept Single_version_cli = details_::Single_version_cli<T>::value;
 // - implement assignment operators
 // - think about returning from lexer std::optional instead of -1
 //
-template<cli::concepts::Parameter... P>
+template<cli::concepts::Param... P>
 class Cli<P...> {    
 //    template<typename T>
 //    using Is_positional_param = std::bool_constant<cli::Positional_parameter<T>>;
@@ -155,7 +155,7 @@ class Cli<P...> {
         Value_type value;
     };
 
-    template<cli::concepts::Parameter T>
+    template<cli::concepts::Param T>
     using Param_tagged_value = Tagged_value<T, cli::traits::Param_value_t<T>>;
 
 public:

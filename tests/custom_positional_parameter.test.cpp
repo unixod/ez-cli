@@ -1,16 +1,16 @@
 #include <catch2/catch_all.hpp>
-#include "ez/cli/parameter/concepts.h"
-#include "ez/cli/parameter/traits.h"
+#include <ez/cli/parameter/concepts.h>
+#include <ez/cli/parameter/traits.h>
 
-using ez::cli::concepts::Positional_parameter;
-using ez::cli::concepts::Regular_parameter;
-using ez::cli::concepts::Boolean_parameter;
-using ez::cli::concepts::Parameter;
+using ez::cli::concepts::Positional_param;
+using ez::cli::concepts::Regular_param;
+using ez::cli::concepts::Boolean_param;
+using ez::cli::concepts::Param;
 using ez::cli::traits::Param_value_t;
 using namespace std::string_view_literals;
 
 
-struct Mandatory_positional_parameter {
+struct Mandatory_positional_param {
     static constexpr auto name = "some-param"sv;
     static constexpr auto description = "The parameter descritption."sv;
 
@@ -21,14 +21,14 @@ struct Mandatory_positional_parameter {
     }
 };
 
-TEST_CASE("Positional parameter may have no default value (i.e. mandatory parameter)")
+TEST_CASE("Positional param may have no default value (i.e. mandatory param)")
 {
-    using P = Mandatory_positional_parameter;
+    using P = Mandatory_positional_param;
 
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, std::string_view>);
 
@@ -60,14 +60,14 @@ struct Mandatory_repeated_positional_param {
     }
 };
 
-TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
+TEST_CASE("Mandatory positional param may specify allowance for repetition")
 {
     using P = Mandatory_repeated_positional_param;
 
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, std::vector<std::string_view>>);
 
@@ -83,7 +83,7 @@ TEST_CASE("Mandatory positional parameter may specify allowance for repetition")
     STATIC_REQUIRE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Optional_positional_parameter {
+struct Optional_positional_param {
     static constexpr auto name = "some-param"sv;
     static constexpr auto description = "The parameter descritption."sv;
 
@@ -99,14 +99,14 @@ struct Optional_positional_parameter {
     }
 };
 
-TEST_CASE("Positional parameter may specify default value (i.e. optional parameter)")
+TEST_CASE("Positional param may specify default value (i.e. optional param)")
 {
-    using P = Optional_positional_parameter;
+    using P = Optional_positional_param;
 
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, std::string_view>);
 
@@ -122,7 +122,7 @@ TEST_CASE("Positional parameter may specify default value (i.e. optional paramet
     STATIC_REQUIRE_FALSE(details_::Has_parse_repeated_value<P>);
 }
 
-struct Optional_repeated_positional_parameter {
+struct Optional_repeated_positional_param {
     static constexpr auto name = "some-param"sv;
     static constexpr auto description = "The parameter descritption."sv;
 
@@ -143,14 +143,14 @@ struct Optional_repeated_positional_parameter {
     }
 };
 
-TEST_CASE("Optional regular parameter may specify allowance for repetition")
+TEST_CASE("Optional regular param may specify allowance for repetition")
 {
-    using P = Optional_repeated_positional_parameter;
+    using P = Optional_repeated_positional_param;
 
-    STATIC_REQUIRE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE(Parameter<P>);
+    STATIC_REQUIRE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE(Param<P>);
 
     STATIC_REQUIRE(std::is_same_v<Param_value_t<P>, std::vector<std::string_view>>);
 
@@ -201,7 +201,7 @@ template<typename... Properties>
 struct Compose_test_param : Properties... {};
 
 
-using Incorrect_parameter_types = std::tuple<
+using Incorrect_param_types = std::tuple<
     // Paremeter name is empty string.
     Compose_test_param<
         Mock_name<"">,
@@ -250,15 +250,15 @@ using Incorrect_parameter_types = std::tuple<
 } // namespace
 
 
-TEMPLATE_LIST_TEST_CASE("Incorrect positional parameter spec", "", Incorrect_parameter_types)
+TEMPLATE_LIST_TEST_CASE("Incorrect positional parameter spec", "", Incorrect_param_types)
 {
     using P = TestType;
 
-    static_assert(!std::is_same_v<P, Incorrect_parameter_types>,
+    static_assert(!std::is_same_v<P, Incorrect_param_types>,
         "Ensure using TEMPLATE_LIST_TEST_CASE and not TEMPLATE_TEST_CASE.");
 
-    STATIC_REQUIRE_FALSE(Positional_parameter<P>);
-    STATIC_REQUIRE_FALSE(Regular_parameter<P>);
-    STATIC_REQUIRE_FALSE(Boolean_parameter<P>);
-    STATIC_REQUIRE_FALSE(Parameter<P>);
+    STATIC_REQUIRE_FALSE(Positional_param<P>);
+    STATIC_REQUIRE_FALSE(Regular_param<P>);
+    STATIC_REQUIRE_FALSE(Boolean_param<P>);
+    STATIC_REQUIRE_FALSE(Param<P>);
 }
